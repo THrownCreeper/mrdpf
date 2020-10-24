@@ -1,0 +1,79 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{cite}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+	
+\begin{document}
+
+\title{macOS RDP Forensics}
+
+\author{\IEEEauthorblockN{Jonathan Holtmann}
+\IEEEauthorblockA{\textit{ITP 445 - Macintosh, OSX, \& iOS Forensics} \\
+\textit{University of Southern California}\\
+Los Angeles, CA, USA}}
+%\and
+%\IEEEauthorblockN{2\textsuperscript{nd} Given Name Surname}
+%\IEEEauthorblockA{\textit{dept. name of organization (of Aff.)} \\
+%\textit{name of organization (of Aff.)}\\
+%City, Country \\
+%email address or ORCID}
+
+\maketitle
+
+\begin{abstract}
+This document provides a forensic examination of the Microsoft Remote Desktop application for macOS, available on the Mac App Store \cite{mrdpapp}.
+\end{abstract}
+
+\begin{IEEEkeywords}
+rdp, forensics, macOS, remote desktop, remote desktop protocol
+\end{IEEEkeywords}
+
+\section{Introduction}
+TODO
+
+\subsection{Heading}
+
+TODO
+
+\subsection{Heading}
+
+Example Table Follows
+
+\begin{table}[htbp]
+\caption{Table Type Styles}
+\begin{center}
+\begin{tabular}{|c|c|c|c|}
+\hline
+\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
+\cline{2-4} 
+\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
+\hline
+copy& More table copy$^{\mathrm{a}}$& &  \\
+\hline
+\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
+\end{tabular}
+\label{tab1}
+\end{center}
+\end{table}
+
+%\begin{figure}[htbp]
+%\centerline{\includegraphics{fig1.png}}
+%\caption{Example of a figure caption.}
+%\label{fig}
+%\end{figure}
+
+\section*{References}
+
+\bibliographystyle{IEEEtran}
+\begin{flushleft}
+\bibliography{IEEEabrv,references}
+\end{flushleft}
+
+\end{document}
