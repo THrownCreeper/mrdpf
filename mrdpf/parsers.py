@@ -17,7 +17,7 @@ import pandas as pd
 from dataclasses_json import dataclass_json
 
 from mrdpf.io.plist import read_bplist, read_nskeyedarchive, decode_plist, UserIdHistoryInfo, ClientFolderRedirectionEntity
-from mrdpf.helper.parser_definitions import OFFLINE_STORAGE_PARAMETERS
+from mrdpf.parser_definitions import OFFLINE_STORAGE_PARAMETERS
 
 class Parsers(Enum):
     PREFERENCES_PLIST = 1
@@ -36,6 +36,7 @@ class BaseParser(object):
 @dataclass_json
 @dataclass
 class Preferences(object):
+    """Models the com.microsoft.rdc.macos.plist binary plist file"""
     telemetry_previous_send_diagnostics: bool
     nswindow_frame_mainwindow: str
     kms_analytics_is_enabled: bool
@@ -80,6 +81,7 @@ class Preferences(object):
 @dataclass_json
 @dataclass
 class Bookmark(object):
+    """Models rows in the ZBOOKMARKENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database"""
     pk: str
     ent: str
     opt: str
@@ -119,6 +121,7 @@ class Bookmark(object):
 @dataclass_json
 @dataclass
 class Metadata(object):
+    """Models rows in the Z_METADATA table of the com.microsoft.rdc.application-data.sqlite SQLite database"""
     version: int
     uuid: str
     data: str
@@ -126,12 +129,14 @@ class Metadata(object):
 @dataclass_json
 @dataclass
 class BookmarkOrder(object):
+    """Models rows in the ZBOOKMARKORDERENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database"""
     pk: int
     ent: int
     opt: int
     root: str
 
 class PreferencesPlistParser(BaseParser):
+    """Parses the com.microsoft.rdc.macos.plist file"""
     path: str
     preferences: Preferences
     data: dict()
@@ -141,7 +146,12 @@ class PreferencesPlistParser(BaseParser):
         self.path = path
 
     def parse(self) -> Preferences:
-        
+        """Parse data from file
+
+        :return: Returns a reference to the parser
+
+        :rtype: PreferencesPlistParser
+        """
         self.data = read_bplist(self.path)
 
         past_devices_key = read_nskeyedarchive(self.data['pastDevicesKey'])
@@ -178,6 +188,7 @@ class PreferencesPlistParser(BaseParser):
         return self
 
 class AppSupportDbParser(BaseParser):
+    """Parses the com.microsoft.rdc.application-data.sqlite database"""
     path = ''
     _tmp_path = ''
     tables: list = list()
@@ -192,6 +203,12 @@ class AppSupportDbParser(BaseParser):
         self.path = path
 
     def parse(self):
+        """Parse data from file
+
+        :return: Returns a reference to the parser
+
+        :rtype: AppSupportDbParser
+        """
         tmp_dir = tempfile.TemporaryDirectory()
 
         # copy main sqlite database
@@ -321,6 +338,7 @@ class AppSupportDbParser(BaseParser):
         return paths
 
 class OfflineStorageHighParser(BaseParser):
+    """Parses the offlinestorageHigh.dat file"""
     path: str = ''
     parameters: pd.DataFrame
 
@@ -329,24 +347,33 @@ class OfflineStorageHighParser(BaseParser):
         self.path = path
 
     def parse(self):
+        """Parse data from file
+
+        :return: Returns a reference to the parser
+
+        :rtype: OfflineStorageHighParser
+        """
         tmp_dir = tempfile.TemporaryDirectory()
         parameters = OFFLINE_STORAGE_PARAMETERS
 
         tmp_path = shutil.copy(self.path, tmp_dir.name)
-
+        
+        # read file and parse to hex string
         with open(tmp_path, 'rb') as file:
             content = binascii.hexlify(file.read())
 
         starts = list()
 
-        start_str = b'c10a000003000000'
-        end_str = b'd0180200'
+        start_str = b'c10a000003000000' # hex that starts an entry
+        end_str = b'd0180200' # hex that ends an entry
 
+        # find all entries
         starts = [m.start() for m in re.finditer(start_str, content)]
         ends = [m.start() for m in re.finditer(end_str, content)]
 
         entries = list()
 
+        # split entries from raw hex string
         for i in range(len(starts)):
             start = starts[i]
             end = ends[i] if i < len(starts) - 1 else len(content)
@@ -357,10 +384,12 @@ class OfflineStorageHighParser(BaseParser):
         for entry in entries:
             entry_count += 1
 
+            # trim start/end bytes from entry
             entry = entry[len(start_str):] if entry_count < len(entries) else entry[len(start_str):len(entry)-len(end_str)]
 
             matches = dict()
 
+            # find instances of parameters in entry
             for param in parameters:
                 val = binascii.hexlify(param)
                 matches[param] = [m.start() for m in re.finditer(val, entry)]
@@ -369,6 +398,7 @@ class OfflineStorageHighParser(BaseParser):
             used = set()
             used_ranges = set()
 
+            # get place in entry for all parameters that only have a single match
             for (k, v) in matches.items():
                 if len(v) == 1 and v[0] not in used_ranges:
                     indexes[k] = v[0]
@@ -377,6 +407,7 @@ class OfflineStorageHighParser(BaseParser):
                     for b in range(v[0], v[0] + len(k)):
                         used_ranges.add(b)
 
+            # get place in entry for parameters with more than one match
             for (k, v) in matches.items():
                 if len(v) != 1:
                     for index in v:
@@ -384,11 +415,12 @@ class OfflineStorageHighParser(BaseParser):
                             used.add(index)
                             indexes[k] = v[0]
                             break
-
+            
             vals = sorted(list(used), key=int)
             results = dict()
-
+            
             for (k, start) in indexes.items():
+                # find end index for parameter 
                 end = 0
                 for num in vals:
                     if num > start:
@@ -398,16 +430,21 @@ class OfflineStorageHighParser(BaseParser):
                 if end == 0:
                     end = len(entry)
 
+                # parse hex string of parameter to ascii
                 r = binascii.unhexlify(entry[start:end]).decode('ascii', 'ignore')
 
+                # extract value, starts after parameter name and one extra char
                 val = r[len(k)+1:]
 
+                # if the value is longer than one, it will end with a garbage char
                 if len(val) > 1:
                     val = val[:-1]
 
+                # remove any remaining garbage characters from the value
                 val = ''.join([i if (ord(i) < 128 and ord(i) > 32) else ' ' for i in val])
                 results[k] = val
 
+            # store parsed paramaters and values in a dict
             for p in parameters:
                 param = p.decode('ascii', 'ignore')
                 val = results[p] if p in results else ''
@@ -418,5 +455,4 @@ class OfflineStorageHighParser(BaseParser):
                     tmp[param] = [val]
             
         self.parameters = pd.DataFrame.from_dict(tmp)
-
         return self

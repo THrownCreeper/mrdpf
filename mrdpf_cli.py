@@ -23,6 +23,11 @@ header =    r"            _____  _____  _____   __ " + '\n'\
             r" |_| |_| |_|_|  \_\_____/|_|    |_|  " + '\n'
 
 def create_dir(path):
+    """Create directory at path. Returns path to created directory.
+
+    If a directory already exists at the provided path, a number will 
+    be appended until the directory does not exist.
+    """
     append = 0
     while os.path.isdir(path):
         append += 1
@@ -33,6 +38,13 @@ def create_dir(path):
     return path
 
 def create_file(path, name, extension):
+    """Create file with name and extension at given base path.
+
+    If a file with the given name and extension already exists, a number 
+    will be appended until a file does not exist.
+
+    :returns: Path to created file
+    """
     append = 0
     file_name = os.path.join(path, name + '.' + extension)
 
@@ -43,25 +55,35 @@ def create_file(path, name, extension):
     return file_name
 
 def write_data(path, name, extension, data):
-    file_name = create_file(path, name, extension)
+    """Write a list of dataclasses to a CSV file at given path with name and extension.
+    
+    :returns: Path to created file or None if data is empty
+    """
     if len(data) > 0:
+        file_name = create_file(path, name, extension)
         cprint(f'=> Writing {len(data)} {name} to {file_name}', 'green')
         write_dataclass_list_to_csv(file_name, data)
+        return file_name
     else:
         cprint(f'-- No {name} to write', 'cyan')
-
+        return None
 
 def write_dataframe(path, name, extension, data):
-    file_name = create_file(path, name, extension)
-
+    """Write a pandas dataframe to a CSV file at path with name and extension.
+    
+    :returns: Path to created file or None if data is empty
+    """
     if len(data) > 0:
+        file_name = create_file(path, name, extension)
         cprint(f'=> Writing {name} to {file_name}', 'green')
-        data.to_csv(file_name)
-            
+        data.to_csv(file_name)   
+        return file_name
     else:
         cprint(f'-- No {name} to write', 'cyan')
+        return None
 
 def write_dataclass_list_to_csv(path: str, data: list):
+    """Write a list of dataclasses to a CSV file at path"""
     with open(path, 'w', newline='') as file:  
         writer = csv.writer(file, delimiter=',')
         headers_writter = False
@@ -75,12 +97,8 @@ def write_dataclass_list_to_csv(path: str, data: list):
 
             writer.writerow(d.values())
 
-if __name__ == '__main__':
-    init()
-
-    cprint(header, 'cyan')
-    cprint('Author: Jonathan Holtmann\n', 'cyan')
-
+def get_parser():
+    """Create argument parser"""
     parser = argparse.ArgumentParser()
 
     input_group = parser.add_mutually_exclusive_group(required=True)
@@ -89,9 +107,18 @@ if __name__ == '__main__':
 
     parser.add_argument('-o', '--out', help='Folder to write results to', required=True)
 
-    parser.add_argument('--no-recurse', help='Do not recurse if input option is --dir. Ignored otherwise.', action='store_true')
+    parser.add_argument('--no-recurse', help='Do not recurse. If input option is not --dir this option is ignored.', action='store_true')
     parser.add_argument('--clear', help='Clear output directory before writing results (will delete all files below out directory)', action='store_true')
+    return parser
 
+if __name__ == '__main__':
+    """Main Function"""
+    init()
+
+    cprint(header, 'cyan')
+    cprint('Author: Jonathan Holtmann\n', 'cyan')
+
+    parser = get_parser()
     args = parser.parse_args()
 
     if not os.path.isdir(args.out):
@@ -168,18 +195,18 @@ if __name__ == '__main__':
                     write_log.append([str(result.path), parser, folder_name, 'Database Dump Folder'])
                     [write_log.append([str(dump_path), parser, folder_name, 'Database Table']) for dump_path in dump_paths] 
                 
-                file_name = create_file(args.out, 'bookmarks', 'csv')
-                if len(result.data.bookmarks) > 0:
-                    cprint(f'=> Writing {len(result.data.bookmarks)} bookmarks to {file_name}', 'green')
-                    write_dataclass_list_to_csv(file_name, result.data.bookmarks)
-                else:
-                    cprint('-- No bookmarks to write', 'cyan')
+                path = write_data(args.out, 'bookmarks', 'csv', result.data.bookmarks)
+                if path: write_log.append([str(result.path), parser, path, 'Parsed Bookmarks table'])
 
-                write_data(args.out, 'metadata', 'csv', result.data.metadata)
-                write_data(args.out, 'bookmark_order', 'csv', result.data.bookmark_order)
+                path = write_data(args.out, 'metadata', 'csv', result.data.metadata)
+                if path: write_log.append([str(result.path), parser, path, 'Parsed Metadata table'])
+
+                path = write_data(args.out, 'bookmark_order', 'csv', result.data.bookmark_order)
+                if path: write_log.append([str(result.path), parser, path, 'Parsed Bookmark Order table'])
         elif parser == Parsers.OFFLINE_STORAGE:
             for result in results[parser]:
-                write_dataframe(args.out, 'offline_storage', 'csv', result.data.parameters)
+                path = write_dataframe(args.out, 'offline_storage', 'csv', result.data.parameters)
+                write_log.append([str(result.path), parser, path, 'Parsed Offline Storage data'])
                 
                 
     headers = ['Input File', 'Parsed Using', 'Parsed To', 'Extra Information']

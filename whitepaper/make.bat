@@ -12,5 +12,14 @@ del mrdpf_whitepaper.aux
 del mrdpf_whitepaper.bbl
 del mrdpf_whitepaper.blg
 del mrdpf_whitepaper.log
+del mrdpf_whitepaper.bcf
+del mrdpf_whitepaper.dvi
+del mrdpf_whitepaper.run.xml
+del mrdpf_whitepaper.tex.bbl
+del mrdpf_whitepaper.tex.blg
+del mrdpf_whitepaper.aux.bbl
+del mrdpf_whitepaper.aux.blg
+del mrdpf_whitepaper.log
+del mrdpf_whitepaper.synctex*
 del mrdpf_whitepaper.synctex*
 mrdpf_whitepaper.pdf
