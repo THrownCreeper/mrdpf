@@ -38,9 +38,28 @@ def create_file(path, name, extension):
 
     while os.path.isfile(file_name):
         append += 1
-        file_name = os.path.join(path, name + '_' + str(append) if append != 0 else '' + '.' + extension)
+        file_name = os.path.join(path, name + '_' + (str(append) if append != 0 else '') + '.' + extension)
 
     return file_name
+
+def write_data(path, name, extension, data):
+    file_name = create_file(path, name, extension)
+    if len(data) > 0:
+        cprint(f'=> Writing {len(data)} {name} to {file_name}', 'green')
+        write_dataclass_list_to_csv(file_name, data)
+    else:
+        cprint(f'-- No {name} to write', 'cyan')
+
+
+def write_dataframe(path, name, extension, data):
+    file_name = create_file(path, name, extension)
+
+    if len(data) > 0:
+        cprint(f'=> Writing {name} to {file_name}', 'green')
+        data.to_csv(file_name)
+            
+    else:
+        cprint(f'-- No {name} to write', 'cyan')
 
 def write_dataclass_list_to_csv(path: str, data: list):
     with open(path, 'w', newline='') as file:  
@@ -155,6 +174,12 @@ if __name__ == '__main__':
                     write_dataclass_list_to_csv(file_name, result.data.bookmarks)
                 else:
                     cprint('-- No bookmarks to write', 'cyan')
+
+                write_data(args.out, 'metadata', 'csv', result.data.metadata)
+                write_data(args.out, 'bookmark_order', 'csv', result.data.bookmark_order)
+        elif parser == Parsers.OFFLINE_STORAGE:
+            for result in results[parser]:
+                write_dataframe(args.out, 'offline_storage', 'csv', result.data.parameters)
                 
                 
     headers = ['Input File', 'Parsed Using', 'Parsed To', 'Extra Information']
