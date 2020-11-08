@@ -9,19 +9,20 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass
+import binascii
+import re
 
 import bpylist
 import pandas as pd
 from dataclasses_json import dataclass_json
 
-from mrdpf.io.plist import read_bplist
-from mrdpf.io.plist import read_nskeyedarchive
-from mrdpf.io.plist import UserIdHistoryInfo
-from mrdpf.io.plist import ClientFolderRedirectionEntity
+from mrdpf.io.plist import read_bplist, read_nskeyedarchive, decode_plist, UserIdHistoryInfo, ClientFolderRedirectionEntity
+from mrdpf.helper.parser_definitions import OFFLINE_STORAGE_PARAMETERS
 
 class Parsers(Enum):
     PREFERENCES_PLIST = 1
     APP_SUPPORT_DB = 2
+    OFFLINE_STORAGE = 3
 
 class BaseParser(object):
     parser_type = None
@@ -114,7 +115,21 @@ class Bookmark(object):
     screen_type_resolution: int
     screen_type_scale: bool
     swap_mouse_button: bool
-    
+
+@dataclass_json
+@dataclass
+class Metadata(object):
+    version: int
+    uuid: str
+    data: str
+
+@dataclass_json
+@dataclass
+class BookmarkOrder(object):
+    pk: int
+    ent: int
+    opt: int
+    root: str
 
 class PreferencesPlistParser(BaseParser):
     path: str
@@ -169,6 +184,8 @@ class AppSupportDbParser(BaseParser):
     tables_nw: list = list()
     wal: bool = False
     bookmarks: list = list()
+    metadata: list = list()
+    bookmark_order: list = list()
 
     def __init__(self, path):
         super().__init__(Parsers.PREFERENCES_PLIST)
@@ -205,9 +222,28 @@ class AppSupportDbParser(BaseParser):
         for (name, table) in tables:
             for (_, row) in table.iterrows():
                 if 'ZBOOKMARKENTITY' == name:
-                    self.bookmarks.append(self._make_bookmark(row))
+                    self.bookmarks.append(self._parse_bookmark(row))
+                elif 'Z_METADATA' == name:
+                    self.metadata.append(self._parse_metadata(row))
+                elif 'ZBOOKMARKORDERENTITY' == name:
+                    self.bookmark_order.append(self._parse_bookmark_order(row))
 
-    def _make_bookmark(self, row):
+    def _parse_bookmark_order(self, row):
+        return BookmarkOrder(
+            row['Z_PK'],
+            row['Z_ENT'],
+            row['Z_OPT'],
+            read_nskeyedarchive(row['ZROOT'])
+        )
+
+    def _parse_metadata(self, row):
+        return Metadata(
+            row['Z_VERSION'],
+            row['Z_UUID'],
+            decode_plist(row['Z_PLIST'])
+        )
+
+    def _parse_bookmark(self, row):
         folder_redirection = row['ZFOLDERREDIRECTIONCOLLECTION']
         if folder_redirection:
             parsed_folder_redirection = read_nskeyedarchive(folder_redirection)
@@ -283,3 +319,104 @@ class AppSupportDbParser(BaseParser):
             paths.append(file_path)
 
         return paths
+
+class OfflineStorageHighParser(BaseParser):
+    path: str = ''
+    parameters: pd.DataFrame
+
+    def __init__(self, path):
+        super().__init__(Parsers.OFFLINE_STORAGE)
+        self.path = path
+
+    def parse(self):
+        tmp_dir = tempfile.TemporaryDirectory()
+        parameters = OFFLINE_STORAGE_PARAMETERS
+
+        tmp_path = shutil.copy(self.path, tmp_dir.name)
+
+        with open(tmp_path, 'rb') as file:
+            content = binascii.hexlify(file.read())
+
+        starts = list()
+
+        start_str = b'c10a000003000000'
+        end_str = b'd0180200'
+
+        starts = [m.start() for m in re.finditer(start_str, content)]
+        ends = [m.start() for m in re.finditer(end_str, content)]
+
+        entries = list()
+
+        for i in range(len(starts)):
+            start = starts[i]
+            end = ends[i] if i < len(starts) - 1 else len(content)
+            entries.append(content[start:end])
+
+        tmp = dict()
+        entry_count = 0
+        for entry in entries:
+            entry_count += 1
+
+            entry = entry[len(start_str):] if entry_count < len(entries) else entry[len(start_str):len(entry)-len(end_str)]
+
+            matches = dict()
+
+            for param in parameters:
+                val = binascii.hexlify(param)
+                matches[param] = [m.start() for m in re.finditer(val, entry)]
+
+            indexes = dict()
+            used = set()
+            used_ranges = set()
+
+            for (k, v) in matches.items():
+                if len(v) == 1 and v[0] not in used_ranges:
+                    indexes[k] = v[0]
+                    used.add(v[0])
+
+                    for b in range(v[0], v[0] + len(k)):
+                        used_ranges.add(b)
+
+            for (k, v) in matches.items():
+                if len(v) != 1:
+                    for index in v:
+                        if index not in used_ranges:
+                            used.add(index)
+                            indexes[k] = v[0]
+                            break
+
+            vals = sorted(list(used), key=int)
+            results = dict()
+
+            for (k, start) in indexes.items():
+                end = 0
+                for num in vals:
+                    if num > start:
+                        end = num
+                        break
+                
+                if end == 0:
+                    end = len(entry)
+
+                r = binascii.unhexlify(entry[start:end]).decode('ascii', 'ignore')
+
+                val = r[len(k)+1:]
+
+                if len(val) > 1:
+                    val = val[:-1]
+
+                val = ''.join([i if (ord(i) < 128 and ord(i) > 32) else ' ' for i in val])
+                results[k] = val
+
+            for p in parameters:
+                param = p.decode('ascii', 'ignore')
+                val = results[p] if p in results else ''
+
+                if param in tmp:
+                    tmp[param].append(val)
+                else:
+                    tmp[param] = [val]
+            
+        self.parameters = pd.DataFrame.from_dict(tmp)
+
+        return self

@@ -1,9 +1,7 @@
 import os
 from dataclasses import dataclass
 
-from mrdpf.parsers import Parsers
-from mrdpf.parsers import PreferencesPlistParser
-from mrdpf.parsers import AppSupportDbParser
+from mrdpf.parsers import Parsers, PreferencesPlistParser, AppSupportDbParser, OfflineStorageHighParser
 
 @dataclass
 class ParsedResult(object):
@@ -22,6 +20,8 @@ def run_parsers(files: dict) -> dict:
                 parser = PreferencesPlistParser(file)
             elif key == Parsers.APP_SUPPORT_DB:
                 parser = AppSupportDbParser(file)
+            elif key == Parsers.OFFLINE_STORAGE:
+                parser = OfflineStorageHighParser(file)
             else:
                 continue
 

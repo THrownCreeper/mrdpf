@@ -9,9 +9,10 @@ class SupportedFile(object):
         self.path = path
         self.parser = parser
 
-_supported_globs =   [
+_supported_globs =  [
                         SupportedFile('com.microsoft.rdc.application-data.sqlite', Parsers.APP_SUPPORT_DB),
-                        SupportedFile('com.microsoft.rdc.macos.plist', Parsers.PREFERENCES_PLIST)
+                        SupportedFile('com.microsoft.rdc.macos.plist', Parsers.PREFERENCES_PLIST),
+                        SupportedFile('offlinestorageHigh.dat', Parsers.OFFLINE_STORAGE)
                     ]
 
 def get_supported_files(path, recurse=False):
