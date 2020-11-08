@@ -329,6 +329,7 @@ class AppSupportDbParser(BaseParser):
         return self._dump_tables(path, self.tables_nw)
 
     def _dump_tables(self, path: str, tables: list) -> list:
+        """Helper function. Get all rows from all tables"""
         paths = list()
         for table in tables:
             file_path = os.path.join(path, table[0] + '.csv')

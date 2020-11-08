@@ -33,3 +33,5 @@ goto end
 
 :end
 popd
+
+robocopy build\html ..\docs /E

@@ -1,0 +1,302 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>mrdpf_cli &#8212; mRDPf 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <script id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script src="../_static/jquery.js"></script>
+    <script src="../_static/underscore.js"></script>
+    <script src="../_static/doctools.js"></script>
+    <script src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">mRDPf 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" accesskey="U">Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mrdpf_cli</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mrdpf_cli</h1><div class="highlight"><pre>
+<span></span><span class="ch">#!/usr/bin/env python3</span>
+
+<span class="kn">import</span> <span class="nn">argparse</span>
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+
+<span class="kn">from</span> <span class="nn">termcolor</span> <span class="kn">import</span> <span class="n">colored</span><span class="p">,</span> <span class="n">cprint</span>
+<span class="kn">from</span> <span class="nn">colorama</span> <span class="kn">import</span> <span class="n">init</span>
+
+<span class="kn">from</span> <span class="nn">mrdpf.core</span> <span class="kn">import</span> <span class="n">run_parsers</span>
+<span class="kn">from</span> <span class="nn">mrdpf.io.general</span> <span class="kn">import</span> <span class="n">get_supported_files</span>
+<span class="kn">from</span> <span class="nn">mrdpf.io.general</span> <span class="kn">import</span> <span class="n">get_matching_glob</span>
+<span class="kn">from</span> <span class="nn">mrdpf.parsers</span> <span class="kn">import</span> <span class="n">Parsers</span>
+<span class="kn">from</span> <span class="nn">mrdpf.helpers</span> <span class="kn">import</span> <span class="n">DataclassJSONEncoder</span>
+
+<span class="n">header</span> <span class="o">=</span>    <span class="sa">r</span><span class="s2">&quot;            _____  _____  _____   __ &quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>\
+            <span class="sa">r</span><span class="s2">&quot;           |  __ \|  __ \|  __ \ / _|&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>\
+            <span class="sa">r</span><span class="s2">&quot;  _ __ ___ | |__) | |  | | |__) | |_ &quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>\
+            <span class="sa">r</span><span class="s2">&quot; | &#39;_ ` _ \|  _  /| |  | |  ___/|  _|&quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>\
+            <span class="sa">r</span><span class="s2">&quot; | | | | | | | \ \| |__| | |    | |  &quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>\
+            <span class="sa">r</span><span class="s2">&quot; |_| |_| |_|_|  \_\_____/|_|    |_|  &quot;</span> <span class="o">+</span> <span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span>
+
+<div class="viewcode-block" id="create_dir"><a class="viewcode-back" href="../index.html#mrdpf_cli.create_dir">[docs]</a><span class="k">def</span> <span class="nf">create_dir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create directory at path. Returns path to created directory.</span>
+
+<span class="sd">    If a directory already exists at the provided path, a number will </span>
+<span class="sd">    be appended until the directory does not exist.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">append</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">path</span><span class="p">):</span>
+        <span class="n">append</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">path</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">append</span><span class="p">)</span> <span class="k">if</span> <span class="n">append</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Creating folder </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+    <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">path</span></div>
+
+<div class="viewcode-block" id="create_file"><a class="viewcode-back" href="../index.html#mrdpf_cli.create_file">[docs]</a><span class="k">def</span> <span class="nf">create_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extension</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Create file with name and extension at given base path.</span>
+
+<span class="sd">    If a file with the given name and extension already exists, a number </span>
+<span class="sd">    will be appended until a file does not exist.</span>
+
+<span class="sd">    :returns: Path to created file</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">append</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">extension</span><span class="p">)</span>
+
+    <span class="k">while</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_name</span><span class="p">):</span>
+        <span class="n">append</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="o">+</span> <span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">append</span><span class="p">)</span> <span class="k">if</span> <span class="n">append</span> <span class="o">!=</span> <span class="mi">0</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;.&#39;</span> <span class="o">+</span> <span class="n">extension</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">file_name</span></div>
+
+<div class="viewcode-block" id="write_data"><a class="viewcode-back" href="../index.html#mrdpf_cli.write_data">[docs]</a><span class="k">def</span> <span class="nf">write_data</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extension</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a list of dataclasses to a CSV file at given path with name and extension.</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: Path to created file or None if data is empty</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">create_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Writing </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span><span class="si">}</span><span class="s1"> </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+        <span class="n">write_dataclass_list_to_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="n">data</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">file_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;-- No </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> to write&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="write_dataframe"><a class="viewcode-back" href="../index.html#mrdpf_cli.write_dataframe">[docs]</a><span class="k">def</span> <span class="nf">write_dataframe</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extension</span><span class="p">,</span> <span class="n">data</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a pandas dataframe to a CSV file at path with name and extension.</span>
+<span class="sd">    </span>
+<span class="sd">    :returns: Path to created file or None if data is empty</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">create_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">extension</span><span class="p">)</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Writing </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> to </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+        <span class="n">data</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_name</span><span class="p">)</span>   
+        <span class="k">return</span> <span class="n">file_name</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;-- No </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s1"> to write&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="write_dataclass_list_to_csv"><a class="viewcode-back" href="../index.html#mrdpf_cli.write_dataclass_list_to_csv">[docs]</a><span class="k">def</span> <span class="nf">write_dataclass_list_to_csv</span><span class="p">(</span><span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">data</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Write a list of dataclasses to a CSV file at path&quot;&quot;&quot;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>  
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">)</span>
+        <span class="n">headers_writter</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">d</span> <span class="o">=</span> <span class="n">item</span><span class="o">.</span><span class="n">to_dict</span><span class="p">()</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">headers_writter</span><span class="p">:</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                <span class="n">headers_writter</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">d</span><span class="o">.</span><span class="n">values</span><span class="p">())</span></div>
+
+<div class="viewcode-block" id="get_parser"><a class="viewcode-back" href="../index.html#mrdpf_cli.get_parser">[docs]</a><span class="k">def</span> <span class="nf">get_parser</span><span class="p">():</span>
+    <span class="sd">&quot;&quot;&quot;Create argument parser&quot;&quot;&quot;</span>
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">argparse</span><span class="o">.</span><span class="n">ArgumentParser</span><span class="p">()</span>
+
+    <span class="n">input_group</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-d&#39;</span><span class="p">,</span> <span class="s1">&#39;--dir&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Directory to search for compatible files&#39;</span><span class="p">)</span>
+    <span class="n">input_group</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--file&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;File to parse&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-o&#39;</span><span class="p">,</span> <span class="s1">&#39;--out&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Folder to write results to&#39;</span><span class="p">,</span> <span class="n">required</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--no-recurse&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Do not recurse. If input option is not --dir this option is ignored.&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+    <span class="n">parser</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;--clear&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Clear output directory before writing results (will delete all files below out directory)&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">parser</span></div>
+
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Main Function&quot;&quot;&quot;</span>
+    <span class="n">init</span><span class="p">()</span>
+
+    <span class="n">cprint</span><span class="p">(</span><span class="n">header</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+    <span class="n">cprint</span><span class="p">(</span><span class="s1">&#39;Author: Jonathan Holtmann</span><span class="se">\n</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+
+    <span class="n">parser</span> <span class="o">=</span> <span class="n">get_parser</span><span class="p">()</span>
+    <span class="n">args</span> <span class="o">=</span> <span class="n">parser</span><span class="o">.</span><span class="n">parse_args</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+        <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Output directory </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="si">}</span><span class="s1"> does not exist&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">clear</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;-- Deleting all files and folders in </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">file_name</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">listdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">):</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="n">file_name</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span> <span class="ow">or</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">islink</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+                    <span class="n">os</span><span class="o">.</span><span class="n">unlink</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+                    <span class="n">shutil</span><span class="o">.</span><span class="n">rmtree</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Failed to delete </span><span class="si">{</span><span class="n">file_path</span><span class="si">}</span><span class="s1"> -- </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s1">: %s&#39;</span><span class="p">,</span> <span class="s1">&#39;red&#39;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">args</span><span class="o">.</span><span class="n">dir</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;-- Given directory &quot;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">):</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Directory </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="si">}</span><span class="s1"> does not exist&#39;</span><span class="p">)</span>
+
+        <span class="n">files</span> <span class="o">=</span> <span class="n">get_supported_files</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">dir</span><span class="p">,</span> <span class="ow">not</span> <span class="n">args</span><span class="o">.</span><span class="n">no_recurse</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">args</span><span class="o">.</span><span class="n">file</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;Given file &quot;</span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s1">&quot;&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">):</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s1"> does not exist&#39;</span><span class="p">)</span>
+
+        <span class="n">parser</span> <span class="o">=</span> <span class="n">get_matching_glob</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parser</span><span class="p">:</span>
+            <span class="n">files</span> <span class="o">=</span> <span class="p">{</span> <span class="n">parser</span><span class="p">:</span> <span class="p">[</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="p">]</span> <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">parser</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;File </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">file</span><span class="si">}</span><span class="s1"> is not supported by mrdpf&#39;</span><span class="p">)</span>
+    
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;++ Got </span><span class="si">{</span><span class="nb">sum</span><span class="p">([</span><span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">files</span><span class="o">.</span><span class="n">values</span><span class="p">()])</span><span class="si">}</span><span class="s1"> files to parse using </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">files</span><span class="p">)</span><span class="si">}</span><span class="s1"> parsers&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+
+    <span class="n">results</span> <span class="o">=</span> <span class="n">run_parsers</span><span class="p">(</span><span class="n">files</span><span class="p">)</span>
+
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Got results from </span><span class="si">{</span><span class="nb">len</span><span class="p">(</span><span class="n">results</span><span class="p">)</span><span class="si">}</span><span class="s1"> parsers&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+
+    <span class="n">write_log</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">for</span> <span class="n">parser</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+        <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;++ Processing results from parser </span><span class="si">{</span><span class="n">parser</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">parser</span> <span class="o">==</span> <span class="n">Parsers</span><span class="o">.</span><span class="n">PREFERENCES_PLIST</span><span class="p">:</span>
+            <span class="n">append</span> <span class="o">=</span> <span class="mi">0</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">parser</span><span class="p">]:</span>
+                <span class="n">file_name</span> <span class="o">=</span> <span class="n">create_file</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;preferences_plist&#39;</span><span class="p">,</span> <span class="s1">&#39;json&#39;</span><span class="p">)</span>
+
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Writing file </span><span class="si">{</span><span class="n">file_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+
+                <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+                    <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">preferences</span><span class="p">,</span> <span class="n">out_file</span><span class="p">,</span> <span class="bp">cls</span><span class="o">=</span><span class="n">DataclassJSONEncoder</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+                    <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="n">Parsers</span><span class="o">.</span><span class="n">APP_SUPPORT_DB</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">parser</span><span class="p">]:</span>
+                <span class="c1"># dump tables</span>
+                <span class="n">folder_name</span> <span class="o">=</span> <span class="n">create_dir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;DB_DUMP&#39;</span><span class="p">))</span>
+                <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Dumping app support database to folder </span><span class="si">{</span><span class="n">folder_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+                <span class="n">dump_paths</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dump_tables</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+                <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">,</span> <span class="s1">&#39;Database Dump Folder&#39;</span><span class="p">])</span>
+                <span class="p">[</span><span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">dump_path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">,</span> <span class="s1">&#39;Database Table&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">dump_path</span> <span class="ow">in</span> <span class="n">dump_paths</span><span class="p">]</span>
+
+                <span class="c1"># dump no-wal tables</span>
+                <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">wal</span><span class="p">:</span>
+                    <span class="n">folder_name</span> <span class="o">=</span> <span class="n">create_dir</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;DB_DUMP_IGNORE_WAL&#39;</span><span class="p">))</span>
+                    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Dumping app support database (ignoring wal) to folder </span><span class="si">{</span><span class="n">folder_name</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+                    <span class="n">dump_paths</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dump_tables_nw</span><span class="p">(</span><span class="n">folder_name</span><span class="p">)</span>
+                    <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">,</span> <span class="s1">&#39;Database Dump Folder&#39;</span><span class="p">])</span>
+                    <span class="p">[</span><span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">dump_path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">folder_name</span><span class="p">,</span> <span class="s1">&#39;Database Table&#39;</span><span class="p">])</span> <span class="k">for</span> <span class="n">dump_path</span> <span class="ow">in</span> <span class="n">dump_paths</span><span class="p">]</span> 
+                
+                <span class="n">path</span> <span class="o">=</span> <span class="n">write_data</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;bookmarks&#39;</span><span class="p">,</span> <span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">bookmarks</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span><span class="p">:</span> <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s1">&#39;Parsed Bookmarks table&#39;</span><span class="p">])</span>
+
+                <span class="n">path</span> <span class="o">=</span> <span class="n">write_data</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;metadata&#39;</span><span class="p">,</span> <span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span><span class="p">:</span> <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s1">&#39;Parsed Metadata table&#39;</span><span class="p">])</span>
+
+                <span class="n">path</span> <span class="o">=</span> <span class="n">write_data</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;bookmark_order&#39;</span><span class="p">,</span> <span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">bookmark_order</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">path</span><span class="p">:</span> <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s1">&#39;Parsed Bookmark Order table&#39;</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">parser</span> <span class="o">==</span> <span class="n">Parsers</span><span class="o">.</span><span class="n">OFFLINE_STORAGE</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">result</span> <span class="ow">in</span> <span class="n">results</span><span class="p">[</span><span class="n">parser</span><span class="p">]:</span>
+                <span class="n">path</span> <span class="o">=</span> <span class="n">write_dataframe</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;offline_storage&#39;</span><span class="p">,</span> <span class="s1">&#39;csv&#39;</span><span class="p">,</span> <span class="n">result</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">parameters</span><span class="p">)</span>
+                <span class="n">write_log</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">path</span><span class="p">),</span> <span class="n">parser</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="s1">&#39;Parsed Offline Storage data&#39;</span><span class="p">])</span>
+                
+                
+    <span class="n">headers</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;Input File&#39;</span><span class="p">,</span> <span class="s1">&#39;Parsed Using&#39;</span><span class="p">,</span> <span class="s1">&#39;Parsed To&#39;</span><span class="p">,</span> <span class="s1">&#39;Extra Information&#39;</span><span class="p">]</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="p">,</span> <span class="s1">&#39;write_log.csv&#39;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">,</span> <span class="n">newline</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">out_file</span><span class="p">:</span>
+        <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">writer</span><span class="p">(</span><span class="n">out_file</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s1">&#39;,&#39;</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s1">&#39;|&#39;</span><span class="p">,</span> <span class="n">quoting</span><span class="o">=</span><span class="n">csv</span><span class="o">.</span><span class="n">QUOTE_MINIMAL</span><span class="p">)</span>
+        <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">headers</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">write_log</span><span class="p">:</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;=&gt; Wrote &quot;write_log.csv&quot; to </span><span class="si">{</span><span class="n">args</span><span class="o">.</span><span class="n">out</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">,</span> <span class="s1">&#39;green&#39;</span><span class="p">)</span>
+    <span class="n">cprint</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;== Done&#39;</span><span class="p">,</span> <span class="s1">&#39;cyan&#39;</span><span class="p">)</span>
+</pre></div>
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">mRDPf 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="index.html" >Module code</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">mrdpf_cli</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Jonathan Holtmann.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 3.3.0.
+    </div>
+  </body>
+</html>
