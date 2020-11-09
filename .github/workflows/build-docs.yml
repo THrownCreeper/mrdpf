@@ -1,0 +1,22 @@
+name: build-docs
+
+on: 
+  push:
+    branches: [ main ]
+
+jobs:
+  build_sphinx_job:
+    runs-on: ubuntu-latest
+    container: debian:buster-slim
+
+    steps:
+      - name: Get prerequisites and clone repository
+        run: |
+          set -x
+          apt-get update
+          apt-get install -y git
+          git clone "https://token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" .
+        shell: bash
+      - name: Run build script for Sphinx pages
+        run: "docs/buildsite.sh"
+        shell: bash
