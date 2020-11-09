@@ -11,5 +11,5 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Run build script for Sphinx pages
-        run: "docs/buildsite.sh"
+        run: "docs/build.sh"
         shell: bash
