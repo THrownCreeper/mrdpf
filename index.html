@@ -1,0 +1,738 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Welcome to mRDPf’s documentation! &#8212; mRDPf 0.0.1 documentation</title>
+    <link rel="stylesheet" href="_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <script type="text/javascript" src="_static/language_data.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">mRDPf 0.0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="welcome-to-mrdpf-s-documentation">
+<h1>Welcome to mRDPf’s documentation!<a class="headerlink" href="#welcome-to-mrdpf-s-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<ul class="simple">
+<li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
+<li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
+<li><p><a class="reference internal" href="search.html"><span class="std std-ref">Search Page</span></a></p></li>
+</ul>
+</div>
+<div class="section" id="command-line-interface">
+<h1>Command Line Interface<a class="headerlink" href="#command-line-interface" title="Permalink to this headline">¶</a></h1>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">usage</span><span class="p">:</span> <span class="n">mrdpf_cli</span> <span class="p">[</span><span class="o">-</span><span class="n">h</span><span class="p">]</span> <span class="p">(</span><span class="o">-</span><span class="n">d</span> <span class="n">DIR</span> <span class="o">|</span> <span class="o">-</span><span class="n">f</span> <span class="n">FILE</span><span class="p">)</span> <span class="o">-</span><span class="n">o</span> <span class="n">OUT</span> <span class="p">[</span><span class="o">--</span><span class="n">no</span><span class="o">-</span><span class="n">recurse</span><span class="p">]</span> <span class="p">[</span><span class="o">--</span><span class="n">clear</span><span class="p">]</span>
+</pre></div>
+</div>
+<div class="section" id="Named Arguments">
+<h2>Named Arguments<a class="headerlink" href="#Named Arguments" title="Permalink to this headline">¶</a></h2>
+<dl class="option-list">
+<dt><kbd>-d, --dir</kbd></dt>
+<dd><p>Directory to search for compatible files</p>
+</dd>
+<dt><kbd>-f, --file</kbd></dt>
+<dd><p>File to parse</p>
+</dd>
+<dt><kbd>-o, --out</kbd></dt>
+<dd><p>Folder to write results to</p>
+</dd>
+<dt><kbd>--no-recurse</kbd></dt>
+<dd><p>Do not recurse. If input option is not –dir this option is ignored.</p>
+<p>Default: False</p>
+</dd>
+<dt><kbd>--clear</kbd></dt>
+<dd><p>Clear output directory before writing results (will delete all files below out directory)</p>
+<p>Default: False</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="section" id="module-mrdpf_cli">
+<span id="command-line-interface-documentation"></span><h1>Command Line Interface - Documentation<a class="headerlink" href="#module-mrdpf_cli" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataclassJSONEncoder</span></code>(*[, skipkeys, …])</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Parsers</span></code></p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">colored</span></code>(text[, color, on_color, attrs])</p></td>
+<td><p>Colorize text.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cprint</span></code>(text[, color, on_color, attrs])</p></td>
+<td><p>Print colorize text.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf_cli.create_dir" title="mrdpf_cli.create_dir"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_dir</span></code></a>(path)</p></td>
+<td><p>Create directory at path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf_cli.create_file" title="mrdpf_cli.create_file"><code class="xref py py-obj docutils literal notranslate"><span class="pre">create_file</span></code></a>(path, name, extension)</p></td>
+<td><p>Create file with name and extension at given base path.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf_cli.get_parser" title="mrdpf_cli.get_parser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_parser</span></code></a>()</p></td>
+<td><p>Create argument parser</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf_cli.write_data" title="mrdpf_cli.write_data"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_data</span></code></a>(path, name, extension, data)</p></td>
+<td><p>Write a list of dataclasses to a CSV file at given path with name and extension.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf_cli.write_dataclass_list_to_csv" title="mrdpf_cli.write_dataclass_list_to_csv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_dataclass_list_to_csv</span></code></a>(path, data)</p></td>
+<td><p>Write a list of dataclasses to a CSV file at path</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf_cli.write_dataframe" title="mrdpf_cli.write_dataframe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">write_dataframe</span></code></a>(path, name, extension, data)</p></td>
+<td><p>Write a pandas dataframe to a CSV file at path with name and extension.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="function">
+<dt id="mrdpf_cli.create_dir">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">create_dir</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#create_dir"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.create_dir" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create directory at path. Returns path to created directory.</p>
+<p>If a directory already exists at the provided path, a number will 
+be appended until the directory does not exist.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf_cli.create_file">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">create_file</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">name</em>, <em class="sig-param">extension</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#create_file"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.create_file" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create file with name and extension at given base path.</p>
+<p>If a file with the given name and extension already exists, a number 
+will be appended until a file does not exist.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path to created file</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf_cli.get_parser">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">get_parser</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#get_parser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.get_parser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create argument parser</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf_cli.write_data">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">write_data</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">name</em>, <em class="sig-param">extension</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#write_data"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.write_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a list of dataclasses to a CSV file at given path with name and extension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path to created file or None if data is empty</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf_cli.write_dataclass_list_to_csv">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">write_dataclass_list_to_csv</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">data: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#write_dataclass_list_to_csv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.write_dataclass_list_to_csv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a list of dataclasses to a CSV file at path</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf_cli.write_dataframe">
+<code class="sig-prename descclassname">mrdpf_cli.</code><code class="sig-name descname">write_dataframe</code><span class="sig-paren">(</span><em class="sig-param">path</em>, <em class="sig-param">name</em>, <em class="sig-param">extension</em>, <em class="sig-param">data</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf_cli.html#write_dataframe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf_cli.write_dataframe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Write a pandas dataframe to a CSV file at path with name and extension.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Path to created file or None if data is empty</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrdpf.parsers">
+<span id="parsers"></span><h1>Parsers<a class="headerlink" href="#module-mrdpf.parsers" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.AppSupportDbParser" title="mrdpf.parsers.AppSupportDbParser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppSupportDbParser</span></code></a>(path)</p></td>
+<td><p>Parses the com.microsoft.rdc.application-data.sqlite database</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.parsers.Bookmark" title="mrdpf.parsers.Bookmark"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Bookmark</span></code></a>(pk, ent, opt, friendly_name, …)</p></td>
+<td><p>Models rows in the ZBOOKMARKENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.BookmarkOrder" title="mrdpf.parsers.BookmarkOrder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BookmarkOrder</span></code></a>(pk, ent, opt, root)</p></td>
+<td><p>Models rows in the ZBOOKMARKORDERENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClientFolderRedirectionEntity</span></code>(readOnly, …)</p></td>
+<td><p>Models ClientFolderRedirectionEntity PLIST class</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Enum</span></code></p></td>
+<td><p>Generic enumeration.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.parsers.Metadata" title="mrdpf.parsers.Metadata"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Metadata</span></code></a>(version, uuid, data)</p></td>
+<td><p>Models rows in the Z_METADATA table of the com.microsoft.rdc.application-data.sqlite SQLite database</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.OfflineStorageHighParser" title="mrdpf.parsers.OfflineStorageHighParser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OfflineStorageHighParser</span></code></a>(path)</p></td>
+<td><p>Parses the offlinestorageHigh.dat file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.parsers.Parsers" title="mrdpf.parsers.Parsers"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Parsers</span></code></a></p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.Preferences" title="mrdpf.parsers.Preferences"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Preferences</span></code></a>(…)</p></td>
+<td><p>Models the com.microsoft.rdc.macos.plist binary plist file</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.parsers.PreferencesPlistParser" title="mrdpf.parsers.PreferencesPlistParser"><code class="xref py py-obj docutils literal notranslate"><span class="pre">PreferencesPlistParser</span></code></a>(path)</p></td>
+<td><p>Parses the com.microsoft.rdc.macos.plist file</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserIdHistoryInfo</span></code>(userIdKey, timestampKey)</p></td>
+<td><p>Models UserIdHistory PLIST class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, …)</p></td>
+<td><p>The year, month and day arguments are required.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">b64encode</span></code>(s[, altchars])</p></td>
+<td><p>Encode the bytes-like object s using Base64 and return a bytes object.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass</span></code>([cls, init, repr, eq, order, …])</p></td>
+<td><p>Returns the same class as was passed in, with dunder methods added based on the fields defined in the class.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass_json</span></code>([_cls, letter_case, undefined])</p></td>
+<td><p>Based on the code in the <cite>dataclasses</cite> module to handle optional-parens decorators.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">decode_plist</span></code>(data[, format])</p></td>
+<td><p>Decode byte string into dictionary using provided format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_bplist</span></code>(path)</p></td>
+<td><p>Read binary plist from file at path.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_nskeyedarchive</span></code>(data)</p></td>
+<td><p>Decode binary string encoded using NSKeyedArchiver.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="mrdpf.parsers.AppSupportDbParser">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">AppSupportDbParser</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#AppSupportDbParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.AppSupportDbParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mrdpf.parsers.BaseParser</span></code></p>
+<p>Parses the com.microsoft.rdc.application-data.sqlite database</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.AppSupportDbParser.parse" title="mrdpf.parsers.AppSupportDbParser.parse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse</span></code></a>()</p></td>
+<td><p>Parse data from file</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mrdpf.parsers.AppSupportDbParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#AppSupportDbParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.AppSupportDbParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse data from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns a reference to the parser</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mrdpf.parsers.AppSupportDbParser" title="mrdpf.parsers.AppSupportDbParser">AppSupportDbParser</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.Bookmark">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">Bookmark</code><span class="sig-paren">(</span><em class="sig-param">pk: str</em>, <em class="sig-param">ent: str</em>, <em class="sig-param">opt: str</em>, <em class="sig-param">friendly_name: str</em>, <em class="sig-param">hostname: str</em>, <em class="sig-param">zid: str</em>, <em class="sig-param">rdp_string: str</em>, <em class="sig-param">folder_redirection_config: mrdpf.io.plist.ClientFolderRedirectionEntity</em>, <em class="sig-param">last_connected: datetime.datetime</em>, <em class="sig-param">redirect_camera: bool</em>, <em class="sig-param">redirect_folders: bool</em>, <em class="sig-param">redirect_clipboard: bool</em>, <em class="sig-param">redirect_printers: bool</em>, <em class="sig-param">redirect_smartcard: bool</em>, <em class="sig-param">bookmark_folder: int</em>, <em class="sig-param">fok_bookmark_folder: int</em>, <em class="sig-param">credential: int</em>, <em class="sig-param">gateway: int</em>, <em class="sig-param">creation_source: str</em>, <em class="sig-param">authoring_tool: str</em>, <em class="sig-param">admin_mode: bool</em>, <em class="sig-param">audio_capture_enabled: bool</em>, <em class="sig-param">audio_playback: str</em>, <em class="sig-param">auto_reconnect_enabled: bool</em>, <em class="sig-param">color_depth: int</em>, <em class="sig-param">dynamic_resolution_enabled: bool</em>, <em class="sig-param">retina_enabled: bool</em>, <em class="sig-param">input_mode: str</em>, <em class="sig-param">use_all_monitors: bool</em>, <em class="sig-param">screen_type: str</em>, <em class="sig-param">screen_type_height: int</em>, <em class="sig-param">screen_type_width: int</em>, <em class="sig-param">screen_type_resolution: int</em>, <em class="sig-param">screen_type_scale: bool</em>, <em class="sig-param">swap_mouse_button: bool</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#Bookmark"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.Bookmark" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Models rows in the ZBOOKMARKENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.BookmarkOrder">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">BookmarkOrder</code><span class="sig-paren">(</span><em class="sig-param">pk: int</em>, <em class="sig-param">ent: int</em>, <em class="sig-param">opt: int</em>, <em class="sig-param">root: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#BookmarkOrder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.BookmarkOrder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Models rows in the ZBOOKMARKORDERENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.Metadata">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">Metadata</code><span class="sig-paren">(</span><em class="sig-param">version: int</em>, <em class="sig-param">uuid: str</em>, <em class="sig-param">data: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#Metadata"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.Metadata" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Models rows in the Z_METADATA table of the com.microsoft.rdc.application-data.sqlite SQLite database</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.OfflineStorageHighParser">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">OfflineStorageHighParser</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#OfflineStorageHighParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.OfflineStorageHighParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mrdpf.parsers.BaseParser</span></code></p>
+<p>Parses the offlinestorageHigh.dat file</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.OfflineStorageHighParser.parse" title="mrdpf.parsers.OfflineStorageHighParser.parse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse</span></code></a>()</p></td>
+<td><p>Parse data from file</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mrdpf.parsers.OfflineStorageHighParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#OfflineStorageHighParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.OfflineStorageHighParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse data from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns a reference to the parser</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mrdpf.parsers.OfflineStorageHighParser" title="mrdpf.parsers.OfflineStorageHighParser">OfflineStorageHighParser</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.Parsers">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">Parsers</code><a class="reference internal" href="_modules/mrdpf/parsers.html#Parsers"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.Parsers" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></p>
+<p>An enumeration.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.Preferences">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">Preferences</code><span class="sig-paren">(</span><em class="sig-param">telemetry_previous_send_diagnostics: bool</em>, <em class="sig-param">nswindow_frame_mainwindow: str</em>, <em class="sig-param">kms_analytics_is_enabled: bool</em>, <em class="sig-param">removed_home_folder_redirection: bool</em>, <em class="sig-param">telemetry_previous_daily_events_time: datetime.datetime</em>, <em class="sig-param">user_id_history: {}</em>, <em class="sig-param">past_devices_key: {}</em>, <em class="sig-param">first_run_experience_launched_version: str</em>, <em class="sig-param">telemetry_device_id: str</em>, <em class="sig-param">ms_install_id: str</em>, <em class="sig-param">telemetry_previous_app_launch_version: str</em>, <em class="sig-param">session_id_history: {}</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#Preferences"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.Preferences" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></p>
+<p>Models the com.microsoft.rdc.macos.plist binary plist file</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.parsers.PreferencesPlistParser">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.parsers.</code><code class="sig-name descname">PreferencesPlistParser</code><span class="sig-paren">(</span><em class="sig-param">path</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/parsers.html#PreferencesPlistParser"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.PreferencesPlistParser" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">mrdpf.parsers.BaseParser</span></code></p>
+<p>Parses the com.microsoft.rdc.macos.plist file</p>
+<p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parsers.PreferencesPlistParser.parse" title="mrdpf.parsers.PreferencesPlistParser.parse"><code class="xref py py-obj docutils literal notranslate"><span class="pre">parse</span></code></a>()</p></td>
+<td><p>Parse data from file</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mrdpf.parsers.PreferencesPlistParser.parse">
+<code class="sig-name descname">parse</code><span class="sig-paren">(</span><span class="sig-paren">)</span> &#x2192; mrdpf.parsers.Preferences<a class="reference internal" href="_modules/mrdpf/parsers.html#PreferencesPlistParser.parse"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.parsers.PreferencesPlistParser.parse" title="Permalink to this definition">¶</a></dt>
+<dd><p>Parse data from file</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns a reference to the parser</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#mrdpf.parsers.PreferencesPlistParser" title="mrdpf.parsers.PreferencesPlistParser">PreferencesPlistParser</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrdpf.core">
+<span id="core"></span><h1>Core<a class="headerlink" href="#module-mrdpf.core" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">AppSupportDbParser</span></code>(path)</p></td>
+<td><p>Parses the com.microsoft.rdc.application-data.sqlite database</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">OfflineStorageHighParser</span></code>(path)</p></td>
+<td><p>Parses the offlinestorageHigh.dat file</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.core.ParsedResult" title="mrdpf.core.ParsedResult"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ParsedResult</span></code></a>(path, data)</p></td>
+<td><p></p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Parsers</span></code></p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">PreferencesPlistParser</span></code>(path)</p></td>
+<td><p>Parses the com.microsoft.rdc.macos.plist file</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass</span></code>([cls, init, repr, eq, order, …])</p></td>
+<td><p>Returns the same class as was passed in, with dunder methods added based on the fields defined in the class.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="mrdpf.core.ParsedResult">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.core.</code><code class="sig-name descname">ParsedResult</code><span class="sig-paren">(</span><em class="sig-param">path: str</em>, <em class="sig-param">data: object</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/core.html#ParsedResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.core.ParsedResult" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-mrdpf.parser_definitions">
+<span id="parser-definitions"></span><h1>Parser Definitions<a class="headerlink" href="#module-mrdpf.parser_definitions" title="Permalink to this headline">¶</a></h1>
+<p><strong>Data:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.parser_definitions.OFFLINE_STORAGE_PARAMETERS" title="mrdpf.parser_definitions.OFFLINE_STORAGE_PARAMETERS"><code class="xref py py-obj docutils literal notranslate"><span class="pre">OFFLINE_STORAGE_PARAMETERS</span></code></a></p></td>
+<td><p>Defines parameters extracted from offlinestorageHigh.dat by OfflineStorageHighParser</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="data">
+<dt id="mrdpf.parser_definitions.OFFLINE_STORAGE_PARAMETERS">
+<code class="sig-prename descclassname">mrdpf.parser_definitions.</code><code class="sig-name descname">OFFLINE_STORAGE_PARAMETERS</code><em class="property"> = [b'AppInfo.Id', b'AppInfo.Language', b'AppInfo.Version', b'DeviceInfo.Id', b'DeviceInfo.Make', b'DeviceInfo.Model', b'DeviceInfo.NetworkType', b'DeviceInfo.OsBuild', b'DeviceInfo.OsName', b'DeviceInfo.OsVersion', b'DeviceInfo.SDKUid', b'EventInfo.InitId', b'EventInfo.Name', b'EventInfo.SdkVersion', b'EventInfo.Sequence', b'EventInfo.Source', b'EventInfo.Time', b'S_e', b'S_j', b'S_k', b'S_p', b'S_t', b'S_v', b'TenantId', b'UserInfo.Id', b'UserInfo.Language', b'UserInfo.TimeZone', b'eventpriority', b'records_received_count', b'high_priority_records_sent_count', b'high_priority_records_tried_to_send_count', b'n_r_count', b'n_r_inv', b'normal_priority_records_received_count', b'r_count', b'r_inv', b'high_priority_records_received_count', b'records_sent_count', b'records_tried_to_send_count', b'AppLifeCycle.State', b'Session.Duration', b'Session.DurationBucket', b'Session.FirstLaunchTime', b'Session.Id', b'Session.State']</em><a class="headerlink" href="#mrdpf.parser_definitions.OFFLINE_STORAGE_PARAMETERS" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines parameters extracted from offlinestorageHigh.dat by OfflineStorageHighParser</p>
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrdpf.helpers">
+<span id="helpers"></span><h1>Helpers<a class="headerlink" href="#module-mrdpf.helpers" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.helpers.DataclassJSONEncoder" title="mrdpf.helpers.DataclassJSONEncoder"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataclassJSONEncoder</span></code></a>(*[, skipkeys, …])</p></td>
+<td><p></p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="mrdpf.helpers.DataclassJSONEncoder">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.helpers.</code><code class="sig-name descname">DataclassJSONEncoder</code><span class="sig-paren">(</span><em class="sig-param">*</em>, <em class="sig-param">skipkeys=False</em>, <em class="sig-param">ensure_ascii=True</em>, <em class="sig-param">check_circular=True</em>, <em class="sig-param">allow_nan=True</em>, <em class="sig-param">sort_keys=False</em>, <em class="sig-param">indent=None</em>, <em class="sig-param">separators=None</em>, <em class="sig-param">default=None</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/helpers.html#DataclassJSONEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.helpers.DataclassJSONEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p><strong>Methods:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.helpers.DataclassJSONEncoder.default" title="mrdpf.helpers.DataclassJSONEncoder.default"><code class="xref py py-obj docutils literal notranslate"><span class="pre">default</span></code></a>(obj)</p></td>
+<td><p>Implement this method in a subclass such that it returns a serializable object for <code class="docutils literal notranslate"><span class="pre">o</span></code>, or calls the base implementation (to raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="mrdpf.helpers.DataclassJSONEncoder.default">
+<code class="sig-name descname">default</code><span class="sig-paren">(</span><em class="sig-param">obj</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/helpers.html#DataclassJSONEncoder.default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.helpers.DataclassJSONEncoder.default" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implement this method in a subclass such that it returns
+a serializable object for <code class="docutils literal notranslate"><span class="pre">o</span></code>, or calls the base implementation
+(to raise a <code class="docutils literal notranslate"><span class="pre">TypeError</span></code>).</p>
+<p>For example, to support arbitrary iterators, you could
+implement default like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">):</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="n">iterable</span> <span class="o">=</span> <span class="nb">iter</span><span class="p">(</span><span class="n">o</span><span class="p">)</span>
+    <span class="k">except</span> <span class="ne">TypeError</span><span class="p">:</span>
+        <span class="k">pass</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">iterable</span><span class="p">)</span>
+    <span class="c1"># Let the base class default method raise the TypeError</span>
+    <span class="k">return</span> <span class="n">JSONEncoder</span><span class="o">.</span><span class="n">default</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">o</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-mrdpf.io.general">
+<span id="i-o-general"></span><h1>I/O - General<a class="headerlink" href="#module-mrdpf.io.general" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Parsers</span></code></p></td>
+<td><p>An enumeration.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Path</span></code></p></td>
+<td><p>PurePath subclass that can make system calls.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="section" id="module-mrdpf.io.plist">
+<span id="i-o-plist"></span><h1>I/O - PLIST<a class="headerlink" href="#module-mrdpf.io.plist" title="Permalink to this headline">¶</a></h1>
+<p><strong>Classes:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.io.plist.BookmarkOrderItemEntity" title="mrdpf.io.plist.BookmarkOrderItemEntity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BookmarkOrderItemEntity</span></code></a>(id, children)</p></td>
+<td><p>Models BookmarkOrderItemEntity PLIST class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.io.plist.ClientFolderRedirectionEntity" title="mrdpf.io.plist.ClientFolderRedirectionEntity"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ClientFolderRedirectionEntity</span></code></a>(readOnly, …)</p></td>
+<td><p>Models ClientFolderRedirectionEntity PLIST class</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">DataclassArchiver</span></code></p></td>
+<td><p>Helper to easily map python dataclasses (PEP557) to archived objects.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.io.plist.Device" title="mrdpf.io.plist.Device"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Device</span></code></a>(model, sdkVersion, osBuild, …)</p></td>
+<td><p>Models Device PLIST class</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.io.plist.DeviceHistoryInfo" title="mrdpf.io.plist.DeviceHistoryInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">DeviceHistoryInfo</span></code></a>(deviceKey, timestampKey)</p></td>
+<td><p>Models DeviceHistoryInfo PLIST class</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.io.plist.SessionHistoryInfo" title="mrdpf.io.plist.SessionHistoryInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">SessionHistoryInfo</span></code></a>(sessionIdKey, timestampKey)</p></td>
+<td><p>Models SessionHistoryInfo PLIST class</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.io.plist.UserIdHistoryInfo" title="mrdpf.io.plist.UserIdHistoryInfo"><code class="xref py py-obj docutils literal notranslate"><span class="pre">UserIdHistoryInfo</span></code></a>(userIdKey, timestampKey)</p></td>
+<td><p>Models UserIdHistory PLIST class</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">datetime</span></code>(year, month, day[, hour[, minute[, …)</p></td>
+<td><p>The year, month and day arguments are required.</p></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Functions:</strong></p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass_json</span></code>([_cls, letter_case, undefined])</p></td>
+<td><p>Based on the code in the <cite>dataclasses</cite> module to handle optional-parens decorators.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.io.plist.decode_plist" title="mrdpf.io.plist.decode_plist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">decode_plist</span></code></a>(data[, format])</p></td>
+<td><p>Decode byte string into dictionary using provided format.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.io.plist.read_bplist" title="mrdpf.io.plist.read_bplist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_bplist</span></code></a>(path)</p></td>
+<td><p>Read binary plist from file at path.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#mrdpf.io.plist.read_nskeyedarchive" title="mrdpf.io.plist.read_nskeyedarchive"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_nskeyedarchive</span></code></a>(data)</p></td>
+<td><p>Decode binary string encoded using NSKeyedArchiver.</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#mrdpf.io.plist.read_plist" title="mrdpf.io.plist.read_plist"><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_plist</span></code></a>(path)</p></td>
+<td><p>Read plaintext XML plist from file at path.</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="mrdpf.io.plist.BookmarkOrderItemEntity">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">BookmarkOrderItemEntity</code><span class="sig-paren">(</span><em class="sig-param">id: str</em>, <em class="sig-param">children: list</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#BookmarkOrderItemEntity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.BookmarkOrderItemEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models BookmarkOrderItemEntity PLIST class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.io.plist.ClientFolderRedirectionEntity">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">ClientFolderRedirectionEntity</code><span class="sig-paren">(</span><em class="sig-param">readOnly: bool</em>, <em class="sig-param">path: str</em>, <em class="sig-param">name: str</em>, <em class="sig-param">id: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#ClientFolderRedirectionEntity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.ClientFolderRedirectionEntity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models ClientFolderRedirectionEntity PLIST class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.io.plist.Device">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">Device</code><span class="sig-paren">(</span><em class="sig-param">model: str</em>, <em class="sig-param">sdkVersion: str</em>, <em class="sig-param">osBuild: str</em>, <em class="sig-param">appVersion: str</em>, <em class="sig-param">timeZoneOffset: str</em>, <em class="sig-param">osVersion: str</em>, <em class="sig-param">locale: str</em>, <em class="sig-param">liveUpdatePackageHash: str</em>, <em class="sig-param">liveUpdateReleaseLabel: str</em>, <em class="sig-param">liveUpdateDeploymentKey: str</em>, <em class="sig-param">osApiLevel: str</em>, <em class="sig-param">wrapperRuntimeVersion: str</em>, <em class="sig-param">wrapperSdkVersion: str</em>, <em class="sig-param">carrierCountry: str</em>, <em class="sig-param">appNamespace: str</em>, <em class="sig-param">sdkName: str</em>, <em class="sig-param">appBuild: str</em>, <em class="sig-param">wrapperSdkName: str</em>, <em class="sig-param">screenSize: str</em>, <em class="sig-param">osName: str</em>, <em class="sig-param">carrierName: str</em>, <em class="sig-param">oemName: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#Device"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.Device" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models Device PLIST class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.io.plist.DeviceHistoryInfo">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">DeviceHistoryInfo</code><span class="sig-paren">(</span><em class="sig-param">deviceKey: str</em>, <em class="sig-param">timestampKey: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#DeviceHistoryInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.DeviceHistoryInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models DeviceHistoryInfo PLIST class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.io.plist.SessionHistoryInfo">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">SessionHistoryInfo</code><span class="sig-paren">(</span><em class="sig-param">sessionIdKey: str</em>, <em class="sig-param">timestampKey: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#SessionHistoryInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.SessionHistoryInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models SessionHistoryInfo PLIST class</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="mrdpf.io.plist.UserIdHistoryInfo">
+<em class="property">class </em><code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">UserIdHistoryInfo</code><span class="sig-paren">(</span><em class="sig-param">userIdKey: str</em>, <em class="sig-param">timestampKey: str</em><span class="sig-paren">)</span><a class="reference internal" href="_modules/mrdpf/io/plist.html#UserIdHistoryInfo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.UserIdHistoryInfo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Models UserIdHistory PLIST class</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf.io.plist.decode_plist">
+<code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">decode_plist</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em>, <em class="sig-param">format: plistlib.PlistFormat = &lt;PlistFormat.FMT_BINARY: 2&gt;</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/mrdpf/io/plist.html#decode_plist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.decode_plist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode byte string into dictionary using provided format.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Parsed PLIST</p>
+</dd>
+<dt class="field-even">Rtye</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf.io.plist.read_bplist">
+<code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">read_bplist</code><span class="sig-paren">(</span><em class="sig-param">path: str</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/mrdpf/io/plist.html#read_bplist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.read_bplist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read binary plist from file at path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Parsed PLIST</p>
+</dd>
+<dt class="field-even">Rtye</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf.io.plist.read_nskeyedarchive">
+<code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">read_nskeyedarchive</code><span class="sig-paren">(</span><em class="sig-param">data: bytes</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/mrdpf/io/plist.html#read_nskeyedarchive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.read_nskeyedarchive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Decode binary string encoded using NSKeyedArchiver.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Parsed PLIST</p>
+</dd>
+<dt class="field-even">Rtye</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="mrdpf.io.plist.read_plist">
+<code class="sig-prename descclassname">mrdpf.io.plist.</code><code class="sig-name descname">read_plist</code><span class="sig-paren">(</span><em class="sig-param">path: str</em><span class="sig-paren">)</span> &#x2192; dict<a class="reference internal" href="_modules/mrdpf/io/plist.html#read_plist"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#mrdpf.io.plist.read_plist" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read plaintext XML plist from file at path.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Parsed PLIST</p>
+</dd>
+<dt class="field-even">Rtye</dt>
+<dd class="field-even"><p>dict</p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="#">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Welcome to mRDPf’s documentation!</a></li>
+<li><a class="reference internal" href="#command-line-interface">Command Line Interface</a><ul>
+<li><a class="reference internal" href="#Named Arguments">Named Arguments</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#module-mrdpf_cli">Command Line Interface - Documentation</a></li>
+<li><a class="reference internal" href="#module-mrdpf.parsers">Parsers</a></li>
+<li><a class="reference internal" href="#module-mrdpf.core">Core</a></li>
+<li><a class="reference internal" href="#module-mrdpf.parser_definitions">Parser Definitions</a></li>
+<li><a class="reference internal" href="#module-mrdpf.helpers">Helpers</a></li>
+<li><a class="reference internal" href="#module-mrdpf.io.general">I/O - General</a></li>
+<li><a class="reference internal" href="#module-mrdpf.io.plist">I/O - PLIST</a></li>
+</ul>
+
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/index.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="#">mRDPf 0.0.1 documentation</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Jonathan Holtmann.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>

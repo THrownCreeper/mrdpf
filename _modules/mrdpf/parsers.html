@@ -1,0 +1,536 @@
+
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>mrdpf.parsers &#8212; mRDPf 0.0.1 documentation</title>
+    <link rel="stylesheet" href="../../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mRDPf 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for mrdpf.parsers</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span> <span class="nn">base64</span> <span class="kn">import</span> <span class="n">b64encode</span>
+<span class="kn">import</span> <span class="nn">copy</span>
+<span class="kn">import</span> <span class="nn">time</span>
+<span class="kn">import</span> <span class="nn">tempfile</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">sqlite3</span>
+<span class="kn">import</span> <span class="nn">shutil</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span>
+<span class="kn">from</span> <span class="nn">enum</span> <span class="kn">import</span> <span class="n">Enum</span>
+<span class="kn">from</span> <span class="nn">datetime</span> <span class="kn">import</span> <span class="n">datetime</span>
+<span class="kn">from</span> <span class="nn">dataclasses</span> <span class="kn">import</span> <span class="n">dataclass</span>
+<span class="kn">import</span> <span class="nn">binascii</span>
+<span class="kn">import</span> <span class="nn">re</span>
+
+<span class="kn">import</span> <span class="nn">bpylist</span>
+<span class="kn">import</span> <span class="nn">pandas</span> <span class="k">as</span> <span class="nn">pd</span>
+<span class="kn">from</span> <span class="nn">dataclasses_json</span> <span class="kn">import</span> <span class="n">dataclass_json</span>
+
+<span class="kn">from</span> <span class="nn">mrdpf.io.plist</span> <span class="kn">import</span> <span class="n">read_bplist</span><span class="p">,</span> <span class="n">read_nskeyedarchive</span><span class="p">,</span> <span class="n">decode_plist</span><span class="p">,</span> <span class="n">UserIdHistoryInfo</span><span class="p">,</span> <span class="n">ClientFolderRedirectionEntity</span>
+<span class="kn">from</span> <span class="nn">mrdpf.parser_definitions</span> <span class="kn">import</span> <span class="n">OFFLINE_STORAGE_PARAMETERS</span>
+
+<div class="viewcode-block" id="Parsers"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.Parsers">[docs]</a><span class="k">class</span> <span class="nc">Parsers</span><span class="p">(</span><span class="n">Enum</span><span class="p">):</span>
+    <span class="n">PREFERENCES_PLIST</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">APP_SUPPORT_DB</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">OFFLINE_STORAGE</span> <span class="o">=</span> <span class="mi">3</span></div>
+
+<span class="k">class</span> <span class="nc">BaseParser</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">parser_type</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">paser_type</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">paser_type</span> <span class="o">=</span> <span class="n">paser_type</span>
+    
+    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+<div class="viewcode-block" id="Preferences"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.Preferences">[docs]</a><span class="nd">@dataclass_json</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Preferences</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Models the com.microsoft.rdc.macos.plist binary plist file&quot;&quot;&quot;</span>
+    <span class="n">telemetry_previous_send_diagnostics</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">nswindow_frame_mainwindow</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">kms_analytics_is_enabled</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">removed_home_folder_redirection</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">telemetry_previous_daily_events_time</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">user_id_history</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">past_devices_key</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">first_run_experience_launched_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">telemetry_device_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">ms_install_id</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">telemetry_previous_app_launch_version</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">session_id_history</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">get_headers</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="s1">&#39;TelemetryPreviousSendDiagnostics&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;NSWindow Frame MainWindow&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;kMSAnalyticsIsEnabledKey&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;Developer.removedHomeFolderRedirection&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;TelemetryPreviousDailyEventsTimeKey&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;UserIdHistory&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;pastDevicesKey&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;ClientSettings.FirstRunExperienceLaunchedVersion&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;TelemetryDeviceId&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;MSInstallId&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;TelemetryPreviousAppLaunchVersion&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;SessionIdHistory&#39;</span>
+        <span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">to_list</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry_previous_send_diagnostics</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">nswindow_frame_mainwindow</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">kms_analytics_is_enabled</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">removed_home_folder_redirection</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">telemetry_previous_daily_events_time</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">user_id_history</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">first_run_experience_launched_version</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">past_devices_key</span>
+        <span class="p">]</span></div>
+
+<div class="viewcode-block" id="Bookmark"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.Bookmark">[docs]</a><span class="nd">@dataclass_json</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Bookmark</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Models rows in the ZBOOKMARKENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database&quot;&quot;&quot;</span>
+    <span class="n">pk</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">ent</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">opt</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">friendly_name</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">hostname</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">zid</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">rdp_string</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">folder_redirection_config</span><span class="p">:</span> <span class="n">ClientFolderRedirectionEntity</span>
+    <span class="n">last_connected</span><span class="p">:</span> <span class="n">datetime</span>
+    <span class="n">redirect_camera</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">redirect_folders</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">redirect_clipboard</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">redirect_printers</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">redirect_smartcard</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">bookmark_folder</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">fok_bookmark_folder</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">credential</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">gateway</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">creation_source</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">authoring_tool</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">admin_mode</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">audio_capture_enabled</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">audio_playback</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">auto_reconnect_enabled</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">color_depth</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">dynamic_resolution_enabled</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">retina_enabled</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">input_mode</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">use_all_monitors</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">screen_type</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">screen_type_height</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">screen_type_width</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">screen_type_resolution</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">screen_type_scale</span><span class="p">:</span> <span class="nb">bool</span>
+    <span class="n">swap_mouse_button</span><span class="p">:</span> <span class="nb">bool</span></div>
+
+<div class="viewcode-block" id="Metadata"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.Metadata">[docs]</a><span class="nd">@dataclass_json</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">Metadata</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Models rows in the Z_METADATA table of the com.microsoft.rdc.application-data.sqlite SQLite database&quot;&quot;&quot;</span>
+    <span class="n">version</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">uuid</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">str</span></div>
+
+<div class="viewcode-block" id="BookmarkOrder"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.BookmarkOrder">[docs]</a><span class="nd">@dataclass_json</span>
+<span class="nd">@dataclass</span>
+<span class="k">class</span> <span class="nc">BookmarkOrder</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Models rows in the ZBOOKMARKORDERENTITY table of the com.microsoft.rdc.application-data.sqlite SQLite database&quot;&quot;&quot;</span>
+    <span class="n">pk</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">ent</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">opt</span><span class="p">:</span> <span class="nb">int</span>
+    <span class="n">root</span><span class="p">:</span> <span class="nb">str</span></div>
+
+<div class="viewcode-block" id="PreferencesPlistParser"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.PreferencesPlistParser">[docs]</a><span class="k">class</span> <span class="nc">PreferencesPlistParser</span><span class="p">(</span><span class="n">BaseParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the com.microsoft.rdc.macos.plist file&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span>
+    <span class="n">preferences</span><span class="p">:</span> <span class="n">Preferences</span>
+    <span class="n">data</span><span class="p">:</span> <span class="nb">dict</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">Parsers</span><span class="o">.</span><span class="n">PREFERENCES_PLIST</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+<div class="viewcode-block" id="PreferencesPlistParser.parse"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.PreferencesPlistParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Preferences</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Parse data from file</span>
+
+<span class="sd">        :return: Returns a reference to the parser</span>
+
+<span class="sd">        :rtype: PreferencesPlistParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="o">=</span> <span class="n">read_bplist</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
+
+        <span class="n">past_devices_key</span> <span class="o">=</span> <span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;pastDevicesKey&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">device</span> <span class="ow">in</span> <span class="n">past_devices_key</span><span class="p">:</span>
+            <span class="n">device</span><span class="o">.</span><span class="n">timestampKey</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">device</span><span class="o">.</span><span class="n">timestampKey</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">user_id_history</span> <span class="o">=</span> <span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;UserIdHistory&#39;</span><span class="p">])</span>
+        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">user_id_history</span><span class="p">:</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">timestampKey</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">timestampKey</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">session_id_history</span> <span class="o">=</span> <span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;SessionIdHistory&#39;</span><span class="p">])</span> <span class="k">if</span> <span class="s1">&#39;SessionIdHistory&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">session</span> <span class="ow">in</span> <span class="n">session_id_history</span><span class="p">:</span>
+            <span class="n">session</span><span class="o">.</span><span class="n">timestampKey</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">timestampKey</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="n">telemetry_previous_daily_events_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TelemetryPreviousDailyEventsTimeKey&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="s1">&#39;TelemetryPreviousDailyEventsTimeKey&#39;</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">data</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">telemetry_previous_daily_events_time</span><span class="p">:</span>
+            <span class="n">telemetry_previous_daily_events_time</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">telemetry_previous_daily_events_time</span><span class="p">)</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">preferences</span> <span class="o">=</span> <span class="n">Preferences</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TelemetryPreviousSendDiagnostics&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;NSWindow Frame MainWindow&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;kMSAnalyticsIsEnabledKey&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;Developer.removedHomeFolderRedirection&#39;</span><span class="p">],</span>
+            <span class="n">telemetry_previous_daily_events_time</span><span class="p">,</span>
+            <span class="n">user_id_history</span><span class="p">,</span>
+            <span class="n">past_devices_key</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;ClientSettings.FirstRunExperienceLaunchedVersion&#39;</span><span class="p">],</span>
+            <span class="n">b64encode</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TelemetryDeviceId&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;UTF8&#39;</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;MSInstallId&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="s1">&#39;TelemetryPreviousAppLaunchVersion&#39;</span><span class="p">],</span>
+            <span class="n">session_id_history</span>
+        <span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+
+<div class="viewcode-block" id="AppSupportDbParser"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.AppSupportDbParser">[docs]</a><span class="k">class</span> <span class="nc">AppSupportDbParser</span><span class="p">(</span><span class="n">BaseParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the com.microsoft.rdc.application-data.sqlite database&quot;&quot;&quot;</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">_tmp_path</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">tables</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">tables_nw</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">wal</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span>
+    <span class="n">bookmarks</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">metadata</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+    <span class="n">bookmark_order</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">Parsers</span><span class="o">.</span><span class="n">PREFERENCES_PLIST</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+<div class="viewcode-block" id="AppSupportDbParser.parse"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.AppSupportDbParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse data from file</span>
+
+<span class="sd">        :return: Returns a reference to the parser</span>
+
+<span class="sd">        :rtype: AppSupportDbParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
+
+        <span class="c1"># copy main sqlite database</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tmp_path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+
+        <span class="c1"># dump all data from tables</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tables_nw</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tables</span><span class="p">()</span>
+
+        <span class="c1"># copy over shm and wal if they exist and re-prase</span>
+        <span class="n">wal_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-wal&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">wal_path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">wal_path</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wal</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="n">shm_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">)</span> <span class="o">+</span> <span class="s1">&#39;-shm&#39;</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">shm_path</span><span class="p">):</span>
+            <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="n">shm_path</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">wal</span> <span class="o">=</span> <span class="kc">True</span>
+
+        <span class="c1"># read data again if a WAL file was present</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">tables</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_get_tables</span><span class="p">()</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">wal</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables_nw</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_tables</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span>
+        
+        <span class="k">return</span> <span class="bp">self</span></div>
+    
+    <span class="k">def</span> <span class="nf">_process_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tables</span><span class="p">:</span> <span class="nb">list</span><span class="p">):</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">table</span><span class="p">)</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">_</span><span class="p">,</span> <span class="n">row</span><span class="p">)</span> <span class="ow">in</span> <span class="n">table</span><span class="o">.</span><span class="n">iterrows</span><span class="p">():</span>
+                <span class="k">if</span> <span class="s1">&#39;ZBOOKMARKENTITY&#39;</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bookmarks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_bookmark</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="s1">&#39;Z_METADATA&#39;</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_metadata</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+                <span class="k">elif</span> <span class="s1">&#39;ZBOOKMARKORDERENTITY&#39;</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">bookmark_order</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_parse_bookmark_order</span><span class="p">(</span><span class="n">row</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_parse_bookmark_order</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">BookmarkOrder</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_PK&#39;</span><span class="p">],</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_ENT&#39;</span><span class="p">],</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_OPT&#39;</span><span class="p">],</span>
+            <span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZROOT&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_metadata</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">Metadata</span><span class="p">(</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_VERSION&#39;</span><span class="p">],</span>
+            <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_UUID&#39;</span><span class="p">],</span>
+            <span class="n">decode_plist</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_PLIST&#39;</span><span class="p">])</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_parse_bookmark</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">row</span><span class="p">):</span>
+        <span class="n">folder_redirection</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZFOLDERREDIRECTIONCOLLECTION&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">folder_redirection</span><span class="p">:</span>
+            <span class="n">parsed_folder_redirection</span> <span class="o">=</span> <span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="n">folder_redirection</span><span class="p">)</span>
+
+        <span class="n">last_connection</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZLASTCONNECTED&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">last_connection</span><span class="p">:</span>
+            <span class="n">parsed_last_connection</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">read_nskeyedarchive</span><span class="p">(</span><span class="n">last_connection</span><span class="p">))</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="s1">&#39;%Y-%m-</span><span class="si">%d</span><span class="s1"> %H:%M:%S.</span><span class="si">%f</span><span class="s1">&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">Bookmark</span><span class="p">(</span><span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_PK&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_ENT&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_OPT&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZFRIENDLYNAME&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZHOSTNAME&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZID&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZRDPSTRING&#39;</span><span class="p">],</span>
+                        <span class="n">parsed_folder_redirection</span> <span class="k">if</span> <span class="n">folder_redirection</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">parsed_last_connection</span> <span class="k">if</span> <span class="n">last_connection</span> <span class="k">else</span> <span class="kc">None</span><span class="p">,</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZCAMERAREDIRECTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZFOLDERREDIRECTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZPASTEBOARDREDIRECTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZPRINTERREDIRECTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSMARTCARDREDIRECTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZBOOKMARKFOLDER&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;Z_FOK_BOOKMARKFOLDER&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZCREDENTIAL&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZGATEWAY&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZCREATIONSOURCEENUM&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZAUTHORINGTOOL&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZADMINMODE&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZAUDIOCAPTUREENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZAUDIOPLAYBACKENUM&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZAUTORECONNECTENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZCOLORDEPTHENUM&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZDYNAMICRESOLUTIONENABLED&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZENABLERETINA&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZINPUTMODEENUM&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPEALLMONITORS&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPEENUMTYPE&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPEHEIGHT&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPEWIDTH&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPERESOLUTIONTYPE&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSCREENTYPESCALE&#39;</span><span class="p">],</span>
+                        <span class="n">row</span><span class="p">[</span><span class="s1">&#39;ZSWAPMOUSEBUTTON&#39;</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_get_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">conn</span> <span class="o">=</span> <span class="n">sqlite3</span><span class="o">.</span><span class="n">connect</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tmp_path</span><span class="p">)</span>
+        <span class="n">cursor</span> <span class="o">=</span> <span class="n">conn</span><span class="o">.</span><span class="n">cursor</span><span class="p">()</span>
+        <span class="n">cursor</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="s2">&quot;SELECT name FROM sqlite_master WHERE type=&#39;table&#39;;&quot;</span><span class="p">)</span>
+        <span class="n">table_names</span> <span class="o">=</span> <span class="n">cursor</span><span class="o">.</span><span class="n">fetchall</span><span class="p">()</span>
+
+        <span class="n">tables</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">table_name</span> <span class="ow">in</span> <span class="n">table_names</span><span class="p">:</span>
+            <span class="n">table_name</span> <span class="o">=</span> <span class="n">table_name</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">table</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_sql_query</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;SELECT * from </span><span class="si">{</span><span class="n">table_name</span><span class="si">}</span><span class="s2">&quot;</span> <span class="p">,</span> <span class="n">conn</span><span class="p">)</span>
+            <span class="n">tables</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="n">table_name</span><span class="p">,</span> <span class="n">table</span><span class="p">])</span>
+        
+        <span class="n">cursor</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+        <span class="n">conn</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">tables</span>
+
+    <span class="k">def</span> <span class="nf">dump_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dump_tables</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">dump_tables_nw</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_dump_tables</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">tables_nw</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_dump_tables</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">tables</span><span class="p">:</span> <span class="nb">list</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">list</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Helper function. Get all rows from all tables&quot;&quot;&quot;</span>
+        <span class="n">paths</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">table</span> <span class="ow">in</span> <span class="n">tables</span><span class="p">:</span>
+            <span class="n">file_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">table</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.csv&#39;</span><span class="p">)</span>
+            <span class="n">table</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">to_csv</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">index_label</span><span class="o">=</span><span class="s1">&#39;index&#39;</span><span class="p">)</span>
+            <span class="n">paths</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">paths</span></div>
+
+<div class="viewcode-block" id="OfflineStorageHighParser"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.OfflineStorageHighParser">[docs]</a><span class="k">class</span> <span class="nc">OfflineStorageHighParser</span><span class="p">(</span><span class="n">BaseParser</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Parses the offlinestorageHigh.dat file&quot;&quot;&quot;</span>
+    <span class="n">path</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+    <span class="n">parameters</span><span class="p">:</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">Parsers</span><span class="o">.</span><span class="n">OFFLINE_STORAGE</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">path</span> <span class="o">=</span> <span class="n">path</span>
+
+<div class="viewcode-block" id="OfflineStorageHighParser.parse"><a class="viewcode-back" href="../../index.html#mrdpf.parsers.OfflineStorageHighParser.parse">[docs]</a>    <span class="k">def</span> <span class="nf">parse</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Parse data from file</span>
+
+<span class="sd">        :return: Returns a reference to the parser</span>
+
+<span class="sd">        :rtype: OfflineStorageHighParser</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">tmp_dir</span> <span class="o">=</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span>
+        <span class="n">parameters</span> <span class="o">=</span> <span class="n">OFFLINE_STORAGE_PARAMETERS</span>
+
+        <span class="n">tmp_path</span> <span class="o">=</span> <span class="n">shutil</span><span class="o">.</span><span class="n">copy</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">path</span><span class="p">,</span> <span class="n">tmp_dir</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        
+        <span class="c1"># read file and parse to hex string</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">tmp_path</span><span class="p">,</span> <span class="s1">&#39;rb&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">file</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">file</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
+
+        <span class="n">starts</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="n">start_str</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;c10a000003000000&#39;</span> <span class="c1"># hex that starts an entry</span>
+        <span class="n">end_str</span> <span class="o">=</span> <span class="sa">b</span><span class="s1">&#39;d0180200&#39;</span> <span class="c1"># hex that ends an entry</span>
+
+        <span class="c1"># find all entries</span>
+        <span class="n">starts</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">start_str</span><span class="p">,</span> <span class="n">content</span><span class="p">)]</span>
+        <span class="n">ends</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">end_str</span><span class="p">,</span> <span class="n">content</span><span class="p">)]</span>
+
+        <span class="n">entries</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+
+        <span class="c1"># split entries from raw hex string</span>
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)):</span>
+            <span class="n">start</span> <span class="o">=</span> <span class="n">starts</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">end</span> <span class="o">=</span> <span class="n">ends</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">if</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">starts</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span>
+            <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span>
+
+        <span class="n">tmp</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="n">entry_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">entries</span><span class="p">:</span>
+            <span class="n">entry_count</span> <span class="o">+=</span> <span class="mi">1</span>
+
+            <span class="c1"># trim start/end bytes from entry</span>
+            <span class="n">entry</span> <span class="o">=</span> <span class="n">entry</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">start_str</span><span class="p">):]</span> <span class="k">if</span> <span class="n">entry_count</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span> <span class="k">else</span> <span class="n">entry</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">start_str</span><span class="p">):</span><span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span><span class="o">-</span><span class="nb">len</span><span class="p">(</span><span class="n">end_str</span><span class="p">)]</span>
+
+            <span class="n">matches</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+
+            <span class="c1"># find instances of parameters in entry</span>
+            <span class="k">for</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">hexlify</span><span class="p">(</span><span class="n">param</span><span class="p">)</span>
+                <span class="n">matches</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">m</span><span class="o">.</span><span class="n">start</span><span class="p">()</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">re</span><span class="o">.</span><span class="n">finditer</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="n">entry</span><span class="p">)]</span>
+
+            <span class="n">indexes</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            <span class="n">used</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+            <span class="n">used_ranges</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+
+            <span class="c1"># get place in entry for all parameters that only have a single match</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">matches</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_ranges</span><span class="p">:</span>
+                    <span class="n">indexes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+                    <span class="k">for</span> <span class="n">b</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)):</span>
+                        <span class="n">used_ranges</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+
+            <span class="c1"># get place in entry for parameters with more than one match</span>
+            <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="ow">in</span> <span class="n">matches</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">v</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="k">for</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">v</span><span class="p">:</span>
+                        <span class="k">if</span> <span class="n">index</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">used_ranges</span><span class="p">:</span>
+                            <span class="n">used</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">index</span><span class="p">)</span>
+                            <span class="n">indexes</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">v</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">break</span>
+            
+            <span class="n">vals</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">used</span><span class="p">),</span> <span class="n">key</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+            <span class="n">results</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+            
+            <span class="k">for</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">start</span><span class="p">)</span> <span class="ow">in</span> <span class="n">indexes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="c1"># find end index for parameter </span>
+                <span class="n">end</span> <span class="o">=</span> <span class="mi">0</span>
+                <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                    <span class="k">if</span> <span class="n">num</span> <span class="o">&gt;</span> <span class="n">start</span><span class="p">:</span>
+                        <span class="n">end</span> <span class="o">=</span> <span class="n">num</span>
+                        <span class="k">break</span>
+                
+                <span class="k">if</span> <span class="n">end</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">end</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">entry</span><span class="p">)</span>
+
+                <span class="c1"># parse hex string of parameter to ascii</span>
+                <span class="n">r</span> <span class="o">=</span> <span class="n">binascii</span><span class="o">.</span><span class="n">unhexlify</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="n">start</span><span class="p">:</span><span class="n">end</span><span class="p">])</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+
+                <span class="c1"># extract value, starts after parameter name and one extra char</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">r</span><span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">k</span><span class="p">)</span><span class="o">+</span><span class="mi">1</span><span class="p">:]</span>
+
+                <span class="c1"># if the value is longer than one, it will end with a garbage char</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+                    <span class="n">val</span> <span class="o">=</span> <span class="n">val</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+                <span class="c1"># remove any remaining garbage characters from the value</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">i</span> <span class="k">if</span> <span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">128</span> <span class="ow">and</span> <span class="nb">ord</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">32</span><span class="p">)</span> <span class="k">else</span> <span class="s1">&#39; &#39;</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">val</span><span class="p">])</span>
+                <span class="n">results</span><span class="p">[</span><span class="n">k</span><span class="p">]</span> <span class="o">=</span> <span class="n">val</span>
+
+            <span class="c1"># store parsed paramaters and values in a dict</span>
+            <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">parameters</span><span class="p">:</span>
+                <span class="n">param</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;ascii&#39;</span><span class="p">,</span> <span class="s1">&#39;ignore&#39;</span><span class="p">)</span>
+                <span class="n">val</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="n">p</span><span class="p">]</span> <span class="k">if</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">results</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+                <span class="k">if</span> <span class="n">param</span> <span class="ow">in</span> <span class="n">tmp</span><span class="p">:</span>
+                    <span class="n">tmp</span><span class="p">[</span><span class="n">param</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">tmp</span><span class="p">[</span><span class="n">param</span><span class="p">]</span> <span class="o">=</span> <span class="p">[</span><span class="n">val</span><span class="p">]</span>
+            
+        <span class="bp">self</span><span class="o">.</span><span class="n">parameters</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">tmp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../index.html">mRDPf 0.0.1 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2020, Jonathan Holtmann.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.2.0.
+    </div>
+  </body>
+</html>
