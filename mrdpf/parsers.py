@@ -9,6 +9,7 @@ from typing import Optional
 from enum import Enum
 from datetime import datetime
 from dataclasses import dataclass
+from base64 import b64encode, b64decode
 import binascii
 import re
 
@@ -254,10 +255,23 @@ class AppSupportDbParser(BaseParser):
         )
 
     def _parse_metadata(self, row):
+        data = decode_plist(row['Z_PLIST'])
+        data['NSStoreModelVersionHashes']['BookmarkFolderEntity'] = b64encode(data['NSStoreModelVersionHashes']['BookmarkFolderEntity']).decode()
+        data['NSStoreModelVersionHashes']['ConnectionTimeEntity'] = b64encode(data['NSStoreModelVersionHashes']['ConnectionTimeEntity']).decode()
+        data['NSStoreModelVersionHashes']['TrustEntity'] = b64encode(data['NSStoreModelVersionHashes']['TrustEntity']).decode()
+        data['NSStoreModelVersionHashes']['RemoteResourceEntity'] = b64encode(data['NSStoreModelVersionHashes']['RemoteResourceEntity']).decode()
+        data['NSStoreModelVersionHashes']['GatewayEntity'] = b64encode(data['NSStoreModelVersionHashes']['GatewayEntity']).decode()
+        data['NSStoreModelVersionHashes']['GlobalSettingsEntity'] = b64encode(data['NSStoreModelVersionHashes']['GlobalSettingsEntity']).decode()
+        data['NSStoreModelVersionHashes']['WorkspaceEntity'] = b64encode(data['NSStoreModelVersionHashes']['WorkspaceEntity']).decode()
+        data['NSStoreModelVersionHashes']['BookmarkOrderEntity'] = b64encode(data['NSStoreModelVersionHashes']['BookmarkOrderEntity']).decode()
+        data['NSStoreModelVersionHashes']['CredentialEntity'] = b64encode(data['NSStoreModelVersionHashes']['CredentialEntity']).decode()
+        data['NSStoreModelVersionHashes']['ResolutionEntity'] = b64encode(data['NSStoreModelVersionHashes']['ResolutionEntity']).decode()
+        data['NSStoreModelVersionHashes']['BookmarkEntity'] = b64encode(data['NSStoreModelVersionHashes']['BookmarkEntity']).decode()
+
         return Metadata(
             row['Z_VERSION'],
             row['Z_UUID'],
-            decode_plist(row['Z_PLIST'])
+            data
         )
 
     def _parse_bookmark(self, row):

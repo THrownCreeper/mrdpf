@@ -22,4 +22,3 @@ del mrdpf_whitepaper.aux.blg
 del mrdpf_whitepaper.log
 del mrdpf_whitepaper.synctex*
 del mrdpf_whitepaper.synctex*
-mrdpf_whitepaper.pdf

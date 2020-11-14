@@ -1,4 +1,4 @@
-\documentclass[conference]{IEEEtran}
+\documentclass[journal]{IEEEtran}
 \IEEEoverridecommandlockouts
 % The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
 \usepackage{amsmath,amssymb,amsfonts}
@@ -6,15 +6,24 @@
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
+\usepackage{hyperref}
 \usepackage{cite}
 \def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
     T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+	
+
+\hypersetup{
+    colorlinks,
+    linkcolor={black!50!black},
+    citecolor={black!50!black},
+    urlcolor={darkgray!80!black}
+}
 	
 \begin{document}
 
 \title{macOS RDP Forensics}
 
-\author{\IEEEauthorblockN{Jonathan Holtmann}
+\author{\IEEEauthorblockN{Jonathan Holtmann}\\
 \IEEEauthorblockA{\textit{ITP 445 - Macintosh, OSX, \& iOS Forensics} \\
 \textit{University of Southern California}\\
 Los Angeles, CA, USA}}
@@ -25,51 +34,299 @@ Los Angeles, CA, USA}}
 %City, Country \\
 %email address or ORCID}
 
+\onecolumn
 \maketitle
+\thispagestyle{empty}
+
+\tableofcontents
+\twocolumn
+\pagenumbering{arabic}
 
 \begin{abstract}
-This document provides a forensic examination of the Microsoft Remote Desktop application for macOS, available on the Mac App Store \cite{mrdpapp}.
+This document provides a forensic examination of the Microsoft Remote Desktop application for macOS.
 \end{abstract}
 
 \begin{IEEEkeywords}
 rdp, forensics, macOS, remote desktop
 \end{IEEEkeywords}
 
-\section{Overview of Remote Desktop Protocol}
-TODO
+\section{Remote Desktop Protocol}
+
+The Microsoft Remote Desktop Protocol (RDP) is used for communication between a terminal server and a terminal client \cite{deland-han_understanding_nodate}. The protocol only runs over TCP/IP. The protocol is used to remotely access systems running the Microsoft Windows operating system. For a more detailed and complete overview of the protocol, please refer to Microsoft’s documentation \cite{openspecs-office_ms-rdpbcgr_nodate}. 
 
 \section{macOS RDP Client Application}
 
-
-TODO
+The Windows operating system ships with the built-in RDP client \textit{mstsc.exe}. This client creates various artifacts that can be analyzed to make determinations as to when connections were initiated, as well as certain information relating to user actions while remoted into a system. While no native RDP client exists on macOS, Microsoft has developed one and made it available on the Mac App Store \cite{noauthor_microsoft_nodate}. This client implemented the RDP protocol and can be used as a terminal client to remotely access Windows systems. Analyzing data stored on the system by this client can help in making determinations relating to a suspect’s use of the application to access remote Windows systems. This macOS RDP application will be further referred to as “Microsoft Remote Desktop” or “application”, not to be confused with \textit{mstsc.exe}.
 
 \section{Available Forensic Artifacts}
 
-TODO
+As a Mac App Store applications, the Microsoft Remote Desktop application is forced to run in the App Sandbox \cite{noauthor_about_nodate}. Therefore, it’s configuration files and data stores can be found at the path \path{/Users/{Username}/Library/Containers/com.microsoft.rdc.macos}. Note that this folder will be referred to as \path{{base}} throughout the rest of this document.\\
 
-\subsection{Preferences}
+\noindent Three major sources of artifacts are located within this folder:
+\begin{enumerate}
+	\item \path{{base}/Data/Library/Application Support/com.microsoft.rdc.macos/com.microsoft.rdc.application-data.sqlite}
+	\item \path{{base}/Data/Library/Application Support/Microsoft Remote Desktop/}
+	\item \path{{base}/Data/Library/Preferences/com.microsoft.rc.macos.plist}
+\end{enumerate}
 
-TODO
+Throughout the rest of this document the above sources will be referred to as {source1} through {source3}, or by their folder name. The remaining items in this section will outline various artifacts available within the above folders.
 
-\subsection{Application Database}
+\subsection{1 — com.microsoft.rdc.application-data.sqlite}
 
-Example Table Follows
+This artifact is an SQLite \cite{noauthor_sqlite_nodate} database used to store various objects used by the application, including saved connections, gateways, and credentials. The following is an overview of the information contained within each table. As this table has a large number of columns, the detailed descriptions of all columns are available in the appendix.\\
 
-\begin{table}[htbp]
-\caption{Table Type Styles}
-\begin{center}
-\begin{tabular}{|c|c|c|c|}
-\hline
-\textbf{Table}&\multicolumn{3}{|c|}{\textbf{Table Column Head}} \\
-\cline{2-4} 
-\textbf{Head} & \textbf{\textit{Table column subhead}}& \textbf{\textit{Subhead}}& \textbf{\textit{Subhead}} \\
-\hline
-copy& More table copy$^{\mathrm{a}}$& &  \\
-\hline
-\multicolumn{4}{l}{$^{\mathrm{a}}$Sample of a Table footnote.}
+\subsubsection{Z\_METADATA, Z\_MODELCACHE, Z\_PRIMARYKEY}
+
+These tables contain data relating to the SQLite database format and were not analyzed in detail by the author.
+\\
+
+\subsubsection{ZBOOKMARKENTITY}
+
+When a user adds a remote connection to the application, a corresponding entry is created in this table. The table will also contain a record of the most recently used “Quick Connect” connection initiated by the application. Note that when a new quick connection is attempted (regardless of whether or not it successfully establishes a connection), the QuickConnect row is updated and the previous data is lost.\\
+
+\subsubsection{ZBOOKMARKFOLDERENTITY}
+
+This table defines the bookmark folders a user can create in the application using the “Add Group” option.
+
+\begin{table}[h!]
+\caption{\textit{ZBOOKMARKFOLDERENTITY} - Columns}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property              & Description                                                                                           \\ \hline
+ZID                   & Unique ID (GUID) of this folder.                                                                      \\
+ZTITLE                & The folder name displayed in the application.                                                        
 \end{tabular}
-\label{tab1}
+\end{table}
+
+\subsubsection{ZBOOKMARKORDERENTITY}
+
+This table defines the layout of bookmarks and bookmark folders on the main application window.
+
+\begin{table}[h!]
+\caption{\textit{ZBOOKMARKORDERENTITY} - Columns}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property              & Description                                                                                           \\ \hline
+ZROOT                & 
+Binary PLIST detailing which folder each bookmark is contained in, as well as their order. The order of the folders themselves can also be determined. Note that this PLIST uses the ZID values of both bookmarks and folders instead of the SQLite Z\_PK identifiers.
+\end{tabular}
+\end{table}
+
+\subsubsection{ZCONNECTIONTIMEENTITY}
+
+The author was not able to determine what purpose this table serves. None of the tests performed led to data being added to this table.\\
+
+\subsubsection{ZCREDENTIALENTITY}
+
+This table defines credentials stored by the user. These credentials can be used to bypass the default credential prompt that appears when a connection is attempted. A credential must have a username but must not necessarily have a password.
+
+\begin{table}[h!]
+\caption{\textit{ZCREDENTIALENTITY} - Columns}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property      & Description                                                                  \\ \hline
+ZNILPASSWORD  & 1 if no password is defined for this credential, 0 if a password is defined. \\
+ZFRIENDLYNAME & The display name of the user. If not set, ZUSERNAME is used.                 \\
+ZID           & Unique ID (GUID) of this credential.                                         \\
+ZUSERNAME     & Username associated with this credential                                    
+\end{tabular}
+\end{table}
+
+A credential with the ZNILPASSWORD property set to 0 will have a corresponding entry in the login keychain. The keychain is a secure credential storage service built in to macOS \cite{noauthor_what_nodate}.
+
+\begin{table}[h!]
+\caption{\textit{ZCREDENTIALENTITY} - Keychain Entry}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property & Description                                                                                                                                             \\ \hline
+Property & Column Property / Value                                                                                                                                 \\
+Name     & ZUSERNAME                                                                                                                                               \\
+Kind     & application password                                                                                                                                    \\
+Where    & com.microsoft.rdc.macos                                                                                                                                 \\
+Modified & Date/Time at which the credential was created, a password was added to an existing credential, or the password for an existing credential was modified. \\
+Expires  & --                                                                                                                                                     
+\end{tabular}
+\end{table}
+
+\subsubsection{ZGATEWAYENTITY}
+
+This table tracks gateways configured by the user in the application’s preferences window. Each entry stores the gateway’s IP address as well as a friendly name and Z\_PK of the associated ZCREDENTIAL, if one is configured.\\
+
+\subsubsection{ZGLOBALSETTINGSENTITY}
+
+This table stores various global settings for the application. Many of these settings are configurable in the “General” tab of the application preferences pane.
+
+\begin{table}[h!]
+\caption{\textit{ZGLOBALSETTINGSENTITY} - Columns}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property                    & Value                                                                                                                                                                                                 \\ \hline
+ZENABLETHUMBNAIL            & User defined via checkbox “Show PC thumbnails”. Set to 1 if enabled, 0 otherwise. See the “Connection Thumbnails” section (III-A14) for additional details on thumbnail images.                                 \\
+ZENABLEWORKSPACE            & Set to 1 during all tests performed by the author.                                                                                                                                                    \\
+ZISDEVSETTINGSAC- TIVE        & Set to 0 during all tests performed by the author.                                                                                                                                                    \\
+ZNOTIFYUNSUPPORTE- DKEYBOARDS & Set to 1 during all tests performed by the author.                                                                                                                                                    \\
+ZSENDDIAGNOSTICS            & Used defined via checkbox “Help improve Remote Desktop”                                                                                                                                               \\
+ZUSECOMMANDKEY- FORCLIPBOARD  & User defined via checkbox “Use Mac shortcuts for copy, cut, paste and select all, undo, and find”. 1 if the command key should be used with these shortcuts, 0 if control key should be used instead. \\
+ZUSENEWHEADER- LAYOUT         & This property cannot be directly configured via the GUI and is always set to 0. Manually setting the property to 1 and restarting the application had no affect.                                      \\
+ZZOOMTHUMBNAIL- ONHOVER       & This property cannot be directly configured via the GUI and is always set to 1. Manually setting the property to 0 and restarting the application had no affect.                                     
+\end{tabular}
+\end{table}
+
+\subsubsection{ZLICENSEENTITY}
+
+The author was not able to determine what purpose this table serves. None of the tests performed led to data being added to this table.\\
+
+\subsubsection{ZREMOTERESOURCEENTITY}
+
+The author was not able to determine what purpose this table serves. None of the tests performed led to data being added to this table.\\
+
+\subsubsection{ZRESOLUTIONENTITY}
+
+This table tracks the resolution options displayed in the application menu when adding a new remote connection.\\
+
+\subsubsection{ZTRUSTENTITY}
+
+The author was not able to determine what purpose this table serves. None of the tests performed led to data being added to this table.\\
+
+\subsubsection{ZWORKSPACEENTITY}
+
+The author was not able to determine what purpose this table serves. None of the tests performed led to data being added to this table. This is due to the fact that the author did not have access to a Remote Desktop Workspace, nor the ability to create one for testing purposes.\\
+
+\subsubsection{Connection Thumbnails}
+
+\subsection{2 — Microsoft Remote Desktop/}
+
+Two files of interest exist within this folder, both related to the application’s crash reporting telemetry system. They are created even if the user opts out of telemetry services at the time of first application launch.\\
+
+\subsubsection{\{source2\}/FirstStartTime.dat}
+
+This file begins with the signature “C3 0A 00 00”, followed by a GUID and a plaintext ISO 8601\cite{noauthor_iso_nodate} date in UTC. This date represents the first time the application was launched by the user on the system.
+
+\begin{table}[h!]
+\caption{\textit{FirstStartTime.dat} - Properties}
+\begin{center}
+\begin{tabular}{lll}
+Offset & Length & Property      \\ \hline
+0      & 4      & Header        \\
+4      & 36     & GUID          \\
+40     & 24     & ISO 8601 Date
+\end{tabular}
 \end{center}
+\end{table}
+
+\noindent
+\subsubsection{\{source2\}/offlinestorageHigh.dat}
+
+This file stores application crash reports and telemetry data. The data is periodically transmitted via a POST request to “https://in.appcenter.ms/logs?Api-Version=1.0.0” when telemetry services are enabled \cite{king-of-spades_upload_nodate} \cite{king-of-spades_app_nodate}. The file contains encoded parameters that are sent to the API. Each entry begins with the hex values “C1 0A 00 00 03 00 00 00” and ends with the hex values “D0 18 02 00”. A list of all parameters identified by the author can be found \href{https://jholtmann.github.io/mrdpf/\#mrdpf.parser\_definitions.OFFLINE\_STORAGE\_PARAMETERS'}{here}. Many of these properties are defined in the \href{https://docs.microsoft.com/en-us/deployoffice/privacy/required-diagnostic-data}{Microsoft documentation}.\\
+
+\noindent Properties of interest include, but are not strictly limited to the following.
+\begin{table}[h!]
+\caption{\textit{offlineStorageHigh.dat} - Properties of Interest}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property  						& Description \\ \hline
+AppInfo.Version 					& Version of the application.                                                                                        \\	
+ClientSettings.FirstRunExp- erienceLaunchedVersion & Version of application when first launched                                                                         \\
+DeviceInfo.Model                                & The model name of the Apple computer (e.g. MacBookPro11,4).                                                        \\
+DeviceInfo.OsVersion                          & The Operating System version (e.g. 10.15.6).                                                                       \\
+EventInfo.Name                                  &                                                                                                                    \\
+EventInfo.Time                                   & ISO 8601 date/time the event took place.                                                                           \\
+kMSAnalyticsIsEnabledKey                   &                                                                                                                    \\
+pastDevidesKey                                  & NSKeyedArchiver encoded binary data containing list of device history.                                             \\
+SessionIdHistory                                 & NSKeyedArchiver encoded binary data containing list of sessions. Each entry includes a session ID and a timestamp.\\
+Session.FirstLaunchTime                     & First time the application was launched.                                                                           \\
+TelemetryPreviousSend- Diagnostics                 & Whether or not application should send diagnostic data to Microsoft.                                               \\
+UserIdHistory                                    & NSKeyedArchiver encoded binary data containing TODO.                                                               \\
+UserInfo.TimeZone                                & System time zone.                                                                                                  \\
+\end{tabular}
+\end{table}
+
+Note that while a variety of other properties exist in the file, the author was not able to determine the purpose for all of them. The author confirmed that those properties with clear names contain the data that their names would indicate. However, the author was not able to determine the purpose of the following properties: \textit{S\_e, S\_j, S\_k, S\_p, S\_t, S\_v, r\_count, r\_inv, n\_r\_count, n\_r\_inv, n\_r\_inv}.
+
+\subsection{3 — com.microsoft.rdc.macos.plist}
+
+This file is a binary PLIST that defines operating parameters for the application. Properties of interest include, but are not strictly limited to the following.
+\begin{table}[h!]
+\caption{\textit{com.microsoft.rdc.macos.plist} - Properties}
+\begin{tabular}{p{0.35\linewidth} | p{0.55\linewidth}}
+Property                                           & Description                                                                                                                                                                                                                                                                                       \\ \hline
+ClientSettings.FirstRunExp- erienceLaunchedVersion & Version of application when first launched.                                                                                                                                                                                                                                                       \\
+Developer.removedHomeFo- lderRedirection           & Undetermined. True in all test scenarios.                                                                                                                                                                                                                                                         \\
+kMSAnalyticsIsEnabledKey                           &                                                                                                                                                                                                                                                                                                   \\
+MSInstallId                                        & Undetermined. GUID related to Microsoft App Center.                                                                                                                                                                                                                                               \\
+NSWindow Frame MainWindow                          & Defines the position and size of the main application window \cite{noauthor_frame_nodate}.                                                                                                                                                                                     \\
+pastDevicesKey                                     & NSKeyedArchiver encoded binary data containing list of devices used by application. It is likely that if the application is used across multiple systems with iCloud sync, this property would list all used devices. However, the author did not have the hardware required to test this theory. \\
+\\
+SessionIdHistory                                   & NSKeyedArchiver encoded binary data containing list of sessions. Each entry includes a session ID and a timestamp.                                                                                                                                                                               
+\\
+TelemetryDeviceId                                  & Unique ID used to identify device for telemetry purposes.                                                                                                                                                                                                                                         \\
+TelemetryPreviousAppLau- nchVersion                & Version of application when last launched.                                                                                                                                                                                                                                                        
+\\
+TelemetryPreviousDailyEv- entsTimeKey              &                                                                                                                                                                                                                                                                                                   \\
+TelemetryPreviousSendDia- gnostics                 & Whether or not application should send diagnostic data to Microsoft.                                                                                                                                                                                                                              \\
+UserIdHistory                                      & NSKeyedArchiver encoded binary data containing TODO.                                                                                                                                                                                                                                              
+\end{tabular}
+\end{table}
+
+\section{Quick Reference}
+
+\subsection{First Application Launch Time}
+
+Rerefence section III-B1. The file \path{{source2}/offlinestorageHigh.dat} contains a ISO 8601 formatted date that represents the first time the application was launched.
+
+\subsection{Saved Connections}
+
+Reference section III-A2. The \textit{ZBOOKMARKENTITY} table tracks all saved connections. Information available includes hostname/IP address, last connection time, credential to be used, and more. Analysis of the SQLite WAL may reveal deleted connections and past connection history.
+
+\subsection{Quick Connect Usage}
+
+Reference section III-A2. The \textit{ZBOOKMARKENTITY} contains a row with \textit{ZID} ``QuickConnectBookmark'' which tracks information related to the last quick connect system. Note that this row does not exist if no quick connection attempt has been made. Analysis of the SQLite WAL may reveal past quick connection attempts. Note that the presence of this row in the table is not on its own indicative of the connection having succeeded.
+
+\subsection{Application Usage}
+
+Reference section III-B2. The \path{{source2}/FirstStartTime.dat} file contains telemetry logs that may provide insight into the date/time the application was in use.
+
+\section{Accompanying Python Module}
+
+This white paper is accompanied by a Python module named mRDPf \cite{noauthor_jholtmannmrdpf_nodate}. The Python module is capable of automaticallty parsing all available data from sources 2 and 3. For source 1, the module dumps all SQLite tables once with inclusion of the WAL, and once without. For more detailed analysis of the WAL, a dedicated WAL-forensics tool should be used. See \href{https://jholtmann.github.io/mrdpf/}{this website} for complete documentation of the module as well as it's command line interface. See \href{https://github.com/jholtmann/mrdpf}{this GitHub repository} for the source code for both the Python module and this white paper.
+
+\onecolumn
+\section{Appendix}
+
+\subsection{\textit{ZBOOKMARKENTITY} - Columns}
+
+\begin{table}[h!]
+\caption{\textit{ZBOOKMARKENTITY} - Columns}
+\begin{tabular}{p{0.3\linewidth} | p{0.6\linewidth}}
+Property                      & Description                                                                                                                                                                                    \\ \hline
+ZADMINMODE                    & TODO                                                                                                                                                                                           \\
+ZAUDIOCAPTUREENABLED          & TODO                                                                                                                                                                                           \\
+ZAUDIOPLAYBACKENUM            & User Defined. 0 if sound should be played on host computer, 1 if sound should be played on remote computer, 2 if sound should never be played.                                                                                                                                                                                           \\
+ZAUTORECONNECTENABLED         & TODO                                                                                                                                                                                           \\
+ZCAMERAREDIRECTIONENABLED     & User Defined. True if the host camera should be redirected to the remote system.                                                                                                               \\
+ZCOLORDEPTH- ENUM               & User Defined. Color depth to be used for the connection.                                                                                                                                       \\
+ZDYNAMICRESOLUTIONENABLED     & User Defined. 1 if resolution should be adjusted dynamically to fit the window, 0 otherwise. \\
+ZENABLERETINA                 & User Defined. 1 if retina support is enabled, 0 otherwise.                                                                                                                                     \\
+ZINPUTMODEENUM                & TODO                                                                                                                                                                                           \\
+ZPASTEBOARDREDIRECTIONENABLED & User Defined. 1 if clipboard should be shared, 0 otherwise.                                                                                                                                    \\
+ZPRINTERREDIRECTIONENABLED    & User Defined. 1 if host printers should be redirected to remote system, 0 otherwise.                                                                                                                                                                                           \\
+ZSCREENTYPEALLMONITORS        & User Defined. 1 if all monitors connected to host should be used for connection, 0 if only one monitor should be used.                                                                         \\
+ZSCREENTYPEENUMTYPE           & TODO                                                                                                                                                                                           \\
+ZSCREENTYPEHEIGHT             & 
+User Defined. Height component of custom resolution to use, -1 if not set or using pre-defined resolution.                                                                                                                                                                                           \\
+ZSCREENTYPERESOLUTIONTYPE     & 1 if a custom resolution is set, 0 if a preset resolution is selected.                                                                                                                                                                                           \\
+ZSCREENTYPESCALE              & TODO                                                                                                                                                                                           \\
+ZSCREENTYPEWIDTH              & User Defined. Width component of custom resolution to use, -1 if not set or using pre-defined resolution.                                                                                                                                                                                           \\
+ZSMARTCARDREDIRECTIONENABLED  & User Defined. 1 if smart cards connected to host should be shared with remote system, 0 otherwise.                                                                                             \\
+ZSWAPMOUSEBUTTON              & User Defined. 1 if left and right mouse buttons should be swapped, 0 otherwise.                                                                                                                \\
+ZBOOKMARKFOLDER               & Z\_PK of bookmark folder entity this bookmark is associated with. Folders are defined in ZBOOKMARKORDERENTITY.                                                                                 \\
+ZCREDENTIAL                   & Z\_PK of credential entity this bookmark is associated with. Credentials are defined in ZCREDENTIALENTITY.                                                                                     \\
+ZGATEWAY                      & Z\_PK of gateway entity this bookmark is associated with. Gateways are defined in ZGATEWAYENTITY.                                                                                              \\
+Z\_FOK\_BOOKMARK- FOLDER        & TODO                                                                                                                                                                                           \\
+ZAUTHORINGTOOL                & TODO                                                                                                                                                                                           \\
+ZCREATIONSOURCEENUM           & TODO                                                                                                                                                                                           \\
+ZFRIENDLYNAME                 & User Defined. Display name for connection or ZHOSTNAME if not set.                                                                                                                                                                                           \\
+ZHOSTNAME                     & User Defined. Hostname or IP address of the remote system.                                                                                                                                                                                           \\
+ZID                           & Unique ID (GUID) assigned to bookmark or “QuickConnectBookmark” if bookmark represents a quick connect item.                                                                                   \\
+ZRDPSTRING                    & RDP string used in .rdp files on Windows to define a connection.                                                                                                                               \\
+ZFOLDERREDIRECTIONCOLLECTION  & Binary PLIST defining what host folders, if any, should be made available to the remote system over RDP. Stores path to folder, name of folder, whether or not folder is read only, and an ID. \\
+ZLASTCONNECTED                & Binary PLIST indicating the time at which this bookmark was last used to connect to a remote system.                                                                                           \\
+ZTHUMBNAILIMAGE               & A GUID related to the thumbnail stored for his connection, if one exists. See the “Connection Thumbnails” section (III-A14) for more details.                                                                                                                                                                                         
+\end{tabular}
 \end{table}
 
 %\begin{figure}[htbp]
@@ -78,6 +335,7 @@ copy& More table copy$^{\mathrm{a}}$& &  \\
 %\label{fig}
 %\end{figure}
 
+\clearpage
 \bibliographystyle{IEEEtran}
 \begin{flushleft}
 \bibliography{IEEEabrv,references}
