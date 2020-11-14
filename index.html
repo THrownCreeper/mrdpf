@@ -231,22 +231,25 @@ will be appended until a file does not exist.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">b64encode</span></code>(s[, altchars])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">b64decode</span></code>(s[, altchars, validate])</p></td>
+<td><p>Decode the Base64 encoded bytes-like object or ASCII string s.</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">b64encode</span></code>(s[, altchars])</p></td>
 <td><p>Encode the bytes-like object s using Base64 and return a bytes object.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass</span></code>([cls, init, repr, eq, order, …])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass</span></code>([cls, init, repr, eq, order, …])</p></td>
 <td><p>Returns the same class as was passed in, with dunder methods added based on the fields defined in the class.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass_json</span></code>([_cls, letter_case, undefined])</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">dataclass_json</span></code>([_cls, letter_case, undefined])</p></td>
 <td><p>Based on the code in the <cite>dataclasses</cite> module to handle optional-parens decorators.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">decode_plist</span></code>(data[, format])</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">decode_plist</span></code>(data[, format])</p></td>
 <td><p>Decode byte string into dictionary using provided format.</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_bplist</span></code>(path)</p></td>
+<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_bplist</span></code>(path)</p></td>
 <td><p>Read binary plist from file at path.</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_nskeyedarchive</span></code>(data)</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">read_nskeyedarchive</span></code>(data)</p></td>
 <td><p>Decode binary string encoded using NSKeyedArchiver.</p></td>
 </tr>
 </tbody>
