@@ -44,4 +44,7 @@ OFFLINE_STORAGE_PARAMETERS = [
             b'Session.DurationBucket',
             b'Session.FirstLaunchTime',
             b'Session.Id',
-            b'Session.State']
+            b'Session.State',
+            b'h_inol',
+            b'inol',
+            b'h_inq']
